@@ -8,4 +8,7 @@ InterfacesAndLibraries
 /result
 /result-*
 /build
+/build-*/
 .direnv
+/hfsutils-build
+/hfsutils-install
