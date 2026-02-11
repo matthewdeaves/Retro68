@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <MacMemory.h>
 #include <Processes.h>
@@ -41,7 +42,6 @@
 
 void *_sbrk_r(struct _reent *reent, ptrdiff_t increment)
 {
-    Debugger();
     return NewPtrClear(increment);
 }
 
@@ -49,6 +49,7 @@ void _exit(int status)
 {
     //if(status != 0)
     //    Debugger();
+    fflush(NULL);
     ExitToShell();
     for(;;)
         ;
@@ -64,8 +65,31 @@ ssize_t _write_r(struct _reent *reent, int fd, const void *buf, size_t count)
     long cnt = count;
     if(fd >= kMacRefNumOffset)
     {
-        FSWrite(fd - kMacRefNumOffset, &cnt, buf);
-        return cnt;
+        /*
+         * FSWrite may fail to read from certain memory locations (e.g., string
+         * constants in CODE segments). Copy data to a stack buffer first.
+         * For large writes, use multiple smaller writes.
+         */
+        const size_t kBufSize = 512;
+        char tmpBuf[kBufSize];
+        const char *src = (const char *)buf;
+        size_t remaining = count;
+        size_t totalWritten = 0;
+        short refNum = fd - kMacRefNumOffset;
+
+        while (remaining > 0) {
+            size_t chunk = remaining > kBufSize ? kBufSize : remaining;
+            memcpy(tmpBuf, src, chunk);
+            long chunkCnt = chunk;
+            OSErr err = FSWrite(refNum, &chunkCnt, tmpBuf);
+            if (err != noErr) {
+                break;
+            }
+            totalWritten += chunkCnt;
+            src += chunk;
+            remaining -= chunk;
+        }
+        return totalWritten;
     }
     else
         return _consolewrite(fd,buf,count);
