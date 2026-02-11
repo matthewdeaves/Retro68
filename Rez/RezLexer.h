@@ -25,14 +25,14 @@ class RezLexer
     WaveToken peekWave();
 
 public:
-    RezLexer(RezWorld& world, std::string filename);
-    RezLexer(RezWorld& world, std::string filename, const std::string& data);
+    RezLexer(RezWorld& world, const std::string& filename);
+    RezLexer(RezWorld& world, const std::string& filename, const std::string& data);
     ~RezLexer();
 
     RezSymbol nextToken();
 
-    void addDefine(std::string str);
-    void addIncludePath(std::string path);
+    void addDefine(const std::string& str);
+    void addIncludePath(const std::string& path);
 };
 
 #endif // REZLEXER_H

@@ -20,15 +20,15 @@ class SerialStream : public WaitableStream
     static const long kReadBufferSize = 4096;
     uint8_t readBuffer[kReadBufferSize];
 public:
-    int fd;
-    int baud;
+    int fd = -1;
+    int baud = 0;
 
-    virtual void write(const void* p, size_t n) override;
+    void write(const void* p, size_t n) override;
 
-    virtual void wait() override;
+    void wait() override;
 
-    SerialStream(po::variables_map &options);
-    ~SerialStream();
+    explicit SerialStream(po::variables_map &options);
+    ~SerialStream() override;
 };
 
 class SerialLauncher : public StreamBasedLauncher
@@ -36,10 +36,11 @@ class SerialLauncher : public StreamBasedLauncher
     SerialStream stream;
     ReliableStream rStream;
 public:
-    SerialLauncher(po::variables_map& options);
+    explicit SerialLauncher(po::variables_map& options);
 };
 
 
+// cppcheck-suppress uninitMemberVar
 SerialStream::SerialStream(po::variables_map &options)
 {
     std::string port = options["serial-port"].as<std::string>();

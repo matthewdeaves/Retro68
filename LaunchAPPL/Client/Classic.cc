@@ -11,10 +11,10 @@ namespace po = boost::program_options;
 class ClassicLauncher : public Launcher
 {
 public:
-    ClassicLauncher(po::variables_map& options);
-    virtual ~ClassicLauncher();
+    explicit ClassicLauncher(po::variables_map& options);
+    ~ClassicLauncher() override;
 
-    virtual bool Go(int timeout = 0);
+    bool Go(int timeout = 0) override;
 
 };
 
@@ -30,9 +30,9 @@ ClassicLauncher::~ClassicLauncher()
 }
 
 bool ClassicLauncher::Go(int timeout)
-{    
+{
     FSRef ref;
-    FSPathMakeRef((const UInt8*) appPath.string().c_str(), &ref, NULL);
+    FSPathMakeRef(reinterpret_cast<const UInt8*>(appPath.string().c_str()), &ref, NULL);
     LSApplicationParameters params;
     memset(&params, 0, sizeof(params));
     params.flags = kLSLaunchStartClassic
@@ -40,17 +40,17 @@ bool ClassicLauncher::Go(int timeout)
                  | kLSLaunchDontAddToRecents
                  | kLSLaunchNewInstance;
     params.application = &ref;
-    
+
     ProcessSerialNumber psn;
     LSOpenApplication(&params, &psn);
-    
+
         // Classic startup takes place before LSOpenApplication returns,
         // so no extra timeout is needed
-    
+
     for(int i = 0; i < timeout || timeout == 0; i++)
     {
         sleep(1);
-        
+
         ProcessInfoRec pi;
         pi.processInfoLength = sizeof(pi);
         pi.processName = NULL;

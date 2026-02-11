@@ -9,9 +9,9 @@ class ResType
     int x;
 public:
     ResType() : x(0) {}
-    ResType(int x) : x(x) {}
-    ResType(const std::string& s);
-    ResType(const char* s);
+    explicit ResType(int x) : x(x) {}
+    explicit ResType(const std::string& s);
+    explicit ResType(const char* s);
 
     operator int() const { return x; }
     bool operator<(ResType y) const { return x < y.x; }

@@ -62,7 +62,7 @@ static void usage()
     std::cerr << desc << std::endl;
     std::cerr << "Options can also be specified as environment variables of the form RETRO68_LAUNCHAPPL_OPTION_NAME.\n";
     std::cerr << "Defaults are read from:\n";
-    for(string str : configFiles)
+    for(const string& str : configFiles)
     {
         std::cerr << "\t" << str;
         if(!std::ifstream(str))
@@ -79,13 +79,13 @@ static void usage()
     if(!configuredMethods.empty())
     {
         std::cerr << "Available emulators/environments:\n";
-        for(string m : configuredMethods)
+        for(const string& m : configuredMethods)
             std::cerr << "\t" << m << std::endl;
     }
     if(!unconfiguredMethods.empty())
     {
         std::cerr << "Emulators/environments needing more configuration:\n";
-        for(string m : unconfiguredMethods)
+        for(const string& m : unconfiguredMethods)
             std::cerr << "\t" << m << std::endl;
     }
 

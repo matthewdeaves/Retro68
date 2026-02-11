@@ -32,12 +32,12 @@ class OpenTptConnectionProvider : public ConnectionProvider
 
     static void unloadSegDummy();
 public:
-    OpenTptConnectionProvider(StatusDisplay *statusDisplay);
-    virtual ~OpenTptConnectionProvider();
+    explicit OpenTptConnectionProvider(StatusDisplay *statusDisplay);
+    ~OpenTptConnectionProvider() override;
 
-    virtual Stream* getStream();
+    Stream* getStream() override;
 
-    virtual void idle();
+    void idle() override;
 
-    virtual void* segmentToUnload();
+    void* segmentToUnload() override;
 };

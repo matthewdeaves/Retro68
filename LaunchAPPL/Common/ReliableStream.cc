@@ -59,7 +59,7 @@ void ReliableStream::reset(int sendReset)
     if(sendReset)
     {
         uint8_t resetKind = sendReset == 1 ? kReset1 : kReset2;
-        uint8_t packet[] = {
+        const uint8_t packet[] = {
             magic1[0], magic1[1], magic1[2], magic1[3],
             resetKind, (uint8_t)~resetKind
         };
@@ -69,7 +69,7 @@ void ReliableStream::reset(int sendReset)
 
 void ReliableStream::ack()
 {
-    uint8_t packet[] = {
+    const uint8_t packet[] = {
         magic1[0], magic1[1], magic1[2], magic1[3],
         kAck, (uint8_t)~kAck, (uint8_t)receivedInputPacket, (uint8_t)~receivedInputPacket
     };
@@ -79,7 +79,7 @@ void ReliableStream::ack()
 
 void ReliableStream::nack()
 {
-    uint8_t packet[] = {
+    const uint8_t packet[] = {
         magic1[0], magic1[1], magic1[2], magic1[3],
         kNack, (uint8_t)~kNack, (uint8_t)receivedInputPacket, (uint8_t)~receivedInputPacket
     };
@@ -254,9 +254,9 @@ void ReliableStream::write(const void* p, size_t n)
         {
             auto& packet = packetsToSend.back();
 
-            auto p = packet.end() - 4;
-            crc = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
-            packet.erase(p, packet.end());
+            auto crcPos = packet.end() - 4;
+            crc = (crcPos[0] << 24) | (crcPos[1] << 16) | (crcPos[2] << 8) | crcPos[3];
+            packet.erase(crcPos, packet.end());
         }
         else
         {
@@ -394,8 +394,9 @@ size_t ReliableStream::onReceive(const uint8_t* p, size_t n)
                 unsigned i;
                 for(i = 0; i < n; i++)
                 {
-                    if(p[i] == magic1[match++])
+                    if(p[i] == magic1[match])
                     {
+                        ++match;
                         if(match == 4)
                         {
                             state = State::waiting;

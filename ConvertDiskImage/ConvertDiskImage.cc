@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    std::istringstream bcem(file.resources.resources[ResRef("bcem",128)].getData());
+    std::istringstream bcem(file.resources.resources[ResRef(ResType("bcem"),128)].getData());
     std::istringstream ndif(file.data);
     std::ofstream output(argv[2], std::ios::binary | std::ios::trunc);
 

@@ -26,7 +26,7 @@ void FieldList::addField(FieldPtr field, yy::location loc)
     fields.push_back(field);
 }
 
-void FieldList::addLabel(std::string name, yy::location loc)
+void FieldList::addLabel(const std::string& name, yy::location loc)
 {
     addField(std::make_shared<LabelField>(name), loc);
 }
@@ -59,7 +59,7 @@ void FieldList::compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass)
 
 
 
-void SimpleField::addNamedValue(std::string n)
+void SimpleField::addNamedValue(const std::string& n)
 {
     if(lastNamedValue)
         addNamedValue(n, std::make_shared<BinaryExpr>(
@@ -68,13 +68,13 @@ void SimpleField::addNamedValue(std::string n)
         addNamedValue(n, std::make_shared<IntExpr>(0, yy::location()));
 }
 
-void SimpleField::addNamedValue(std::string n, ExprPtr val)
+void SimpleField::addNamedValue(const std::string& n, ExprPtr val)
 {
     namedValues[n] = val;
     lastNamedValue = val;
 }
 
-ExprPtr SimpleField::lookupNamedValue(std::string n)
+ExprPtr SimpleField::lookupNamedValue(const std::string& n)
 {
     auto p = namedValues.find(n);
     if(p != namedValues.end())
@@ -227,7 +227,7 @@ void SimpleField::compileCompound(ExprPtr expr, ResourceCompiler *compiler, bool
 }
 
 
-ArrayField::ArrayField(std::string name, ExprPtr count)
+ArrayField::ArrayField(const std::string& name, ExprPtr count)
     : name(name), arrayCount(count)
 {
 }
@@ -266,7 +266,7 @@ void ArrayField::compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass)
 }
 
 
-LabelField::LabelField(std::string name)
+LabelField::LabelField(const std::string& name)
     : name(name)
 {
 }
@@ -282,7 +282,7 @@ void LabelField::compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass)
 }
 
 
-void SwitchField::addCase(const std::string name, FieldListPtr alternative)
+void SwitchField::addCase(const std::string& name, FieldListPtr alternative)
 {
     cases[name] = alternative;
 }

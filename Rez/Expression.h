@@ -37,13 +37,13 @@ class Expression
 public:
     yy::location location;
 
-    Expression(yy::location loc) : location(loc) {}
+    explicit Expression(yy::location loc) : location(loc) {}
 
     virtual int evaluateInt(ResourceCompiler *ctx);
     virtual std::string evaluateString(ResourceCompiler *ctx);
     virtual ~Expression();
 
-    void error(ResourceCompiler *ctx, std::string err);
+    void error(ResourceCompiler *ctx, const std::string& err);
 };
 
 class StringExpr : public Expression
@@ -52,7 +52,7 @@ class StringExpr : public Expression
 public:
     StringExpr(const std::string& str, yy::location loc) : Expression(loc), str(str) {}
     ~StringExpr();
-    virtual std::string evaluateString(ResourceCompiler *ctx);
+    std::string evaluateString(ResourceCompiler *ctx) override;
 };
 
 class IntExpr : public Expression
@@ -62,14 +62,14 @@ public:
     IntExpr(int val, yy::location loc) : Expression(loc), val(val) {}
     ~IntExpr();
 
-    virtual int evaluateInt(ResourceCompiler *ctx);
+    int evaluateInt(ResourceCompiler *ctx) override;
 };
 
 class CompoundExpr : public Expression
 {
     std::vector<ExprPtr> items;
 public:
-    CompoundExpr(yy::location loc) : Expression(loc) {}
+    explicit CompoundExpr(yy::location loc) : Expression(loc) {}
 
     void addItem(ExprPtr item);
     ExprPtr getItem(int i) const { return items[i]; }
@@ -96,8 +96,8 @@ public:
         : Expression(loc), op(op), a(a), b(b) {}
     ~BinaryExpr();
 
-    virtual int evaluateInt(ResourceCompiler *ctx);
-    virtual std::string evaluateString(ResourceCompiler *ctx);
+    int evaluateInt(ResourceCompiler *ctx) override;
+    std::string evaluateString(ResourceCompiler *ctx) override;
 };
 
 class UnaryExpr : public Expression
@@ -109,7 +109,7 @@ public:
         : Expression(loc), op(op), a(a) {}
     ~UnaryExpr();
 
-    virtual int evaluateInt(ResourceCompiler *ctx);
+    int evaluateInt(ResourceCompiler *ctx) override;
 };
 
 class IdentifierExpr : public Expression
@@ -121,8 +121,8 @@ public:
 
     void addArgument(ExprPtr e);
     ExprPtr lookup(ResourceCompiler *ctx);
-    virtual int evaluateInt(ResourceCompiler *ctx);
-    virtual std::string evaluateString(ResourceCompiler *ctx);
+    int evaluateInt(ResourceCompiler *ctx) override;
+    std::string evaluateString(ResourceCompiler *ctx) override;
 };
 
 class CountOfExpr : public Expression
@@ -130,7 +130,7 @@ class CountOfExpr : public Expression
     IdentifierExprPtr arg;
 public:
     CountOfExpr(IdentifierExprPtr arg, yy::location loc) : Expression(loc), arg(arg) {}
-    virtual int evaluateInt(ResourceCompiler *ctx);
+    int evaluateInt(ResourceCompiler *ctx) override;
 };
 
 class ArrayIndexExpr : public Expression
@@ -138,7 +138,7 @@ class ArrayIndexExpr : public Expression
     IdentifierExprPtr arg;
 public:
     ArrayIndexExpr(IdentifierExprPtr arg, yy::location loc) : Expression(loc), arg(arg) {}
-    virtual int evaluateInt(ResourceCompiler *ctx);
+    int evaluateInt(ResourceCompiler *ctx) override;
 };
 
 class ReadExpr : public Expression
@@ -146,16 +146,16 @@ class ReadExpr : public Expression
     ExprPtr arg;
 public:
     ReadExpr(ExprPtr arg, yy::location loc) : Expression(loc), arg(arg) {}
-    virtual std::string evaluateString(ResourceCompiler *ctx);
+    std::string evaluateString(ResourceCompiler *ctx) override;
 };
 
 class UnimplementedExpr : public Expression
 {
     std::string msg;
 public:
-    UnimplementedExpr(std::string msg, yy::location loc) : Expression(loc), msg(msg) {}
-    virtual int evaluateInt(ResourceCompiler *ctx);
-    virtual std::string evaluateString(ResourceCompiler *ctx);
+    UnimplementedExpr(const std::string& msg, yy::location loc) : Expression(loc), msg(msg) {}
+    int evaluateInt(ResourceCompiler *ctx) override;
+    std::string evaluateString(ResourceCompiler *ctx) override;
 };
 
 class PeekExpr : public Expression
@@ -166,7 +166,7 @@ class PeekExpr : public Expression
 public:
     PeekExpr(ExprPtr addr, ExprPtr offset, ExprPtr size, yy::location loc);
     PeekExpr(ExprPtr addr, int size, yy::location loc);
-    virtual int evaluateInt(ResourceCompiler *ctx);
+    int evaluateInt(ResourceCompiler *ctx) override;
 };
 
 #endif // EXPRESSION_H

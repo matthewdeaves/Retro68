@@ -65,7 +65,7 @@ static unsigned short CalculateCRC(unsigned short CRC, const char* dataBlock, in
     return CRC;
 }
 
-static void writeMacBinary(std::ostream& out, std::string filename,
+static void writeMacBinary(std::ostream& out, const std::string& filename,
                            ResType type, ResType creator,
                            const Resources& rsrc, const std::string& data)
 {
@@ -129,21 +129,23 @@ static void writeMacBinary(std::ostream& out, std::string filename,
         byte(out,0);
 }
 
-bool ResourceFile::read(std::string path, Format f)
+bool ResourceFile::read(const std::string& path, Format f)
 {
+    // cppcheck-suppress knownConditionTrueFalse
     if(!assign(path, f))
         return false;
     return read();
 }
 
-bool ResourceFile::write(std::string path, Format f)
+bool ResourceFile::write(const std::string& path, Format f)
 {
+    // cppcheck-suppress knownConditionTrueFalse
     if(!assign(path, f))
         return false;
     return write();
 }
 
-static bool CheckAppleDouble(fs::path path, std::string prefix)
+static bool CheckAppleDouble(fs::path path, const std::string& prefix)
 {
     fs::path adPath = path.parent_path() / (prefix  + path.filename().string());
     fs::ifstream in(adPath);
@@ -304,7 +306,7 @@ bool ResourceFile::read()
 {
     fs::path path(pathstring);
 
-    type = creator = 0x3F3F3F3F;
+    type = creator = ResType(0x3F3F3F3F);
 
     if(isSingleFork(format))
     {

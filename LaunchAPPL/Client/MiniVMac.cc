@@ -137,11 +137,11 @@ class MiniVMacLauncher : public Launcher
     fs::path vmacDir;
     fs::path vmacPath;
 #ifdef __APPLE__
-    bool vmacIsAppBundle;
+    bool vmacIsAppBundle = false;
 #endif
 
-    hfsvol *sysvol;
-    hfsvol *vol;
+    hfsvol *sysvol = nullptr;
+    hfsvol *vol = nullptr;
     std::unique_ptr<Resources> systemRes;
 
     void CopySystemFile(const std::string& fn, bool required);
@@ -151,11 +151,11 @@ class MiniVMacLauncher : public Launcher
     void MakeAlias(const std::string& dest, const std::string& src);
     fs::path ConvertImage(const fs::path& path);
 public:
-    MiniVMacLauncher(po::variables_map& options);
-    virtual ~MiniVMacLauncher();
+    explicit MiniVMacLauncher(po::variables_map& options);
+    ~MiniVMacLauncher() override;
 
-    virtual bool Go(int timeout = 0);
-    virtual void DumpOutput();
+    bool Go(int timeout = 0) override;
+    void DumpOutput() override;
 };
 
 
@@ -371,7 +371,7 @@ MiniVMacLauncher::MiniVMacLauncher(po::variables_map &options)
         std::ostringstream rsrcOut;
         app.resources.writeFork(rsrcOut);
         std::string rsrc = rsrcOut.str();
-        std::string& data = app.data;
+        const std::string& data = app.data;
 
         hfsfile *file = hfs_create(vol, "App","APPL","????");
         hfs_setfork(file, 0);
@@ -491,7 +491,7 @@ void MiniVMacLauncher::MakeAlias(const std::string& dest, const std::string& src
 
     std::ostringstream roalias;
     Resources res;
-    res.addResource(Resource("alis", 0, std::string((char*)&alias, sizeof(AliasData))));
+    res.addResource(Resource(ResType("alis"), 0, std::string((char*)&alias, sizeof(AliasData))));
     res.writeFork(roalias);
     std::string ralias = roalias.str();
 
@@ -521,14 +521,14 @@ void MiniVMacLauncher::ReadSystemResources(const std::string& systemFileName)
 
 uint16_t MiniVMacLauncher::GetSystemVersion()
 {
-    Resource vers = systemRes->resources[ResRef('vers', 1)];
+    Resource vers = systemRes->resources[ResRef(ResType('vers'), 1)];
     return (uint16_t)vers.getData()[0] << 8 | vers.getData()[1];
 }
 
 
 std::string MiniVMacLauncher::FindFolder(const std::string& folderType)
 {
-    Resource fld = systemRes->resources[ResRef('fld#', 0)];
+    Resource fld = systemRes->resources[ResRef(ResType('fld#'), 0)];
     size_t i = 0;
     while (i < fld.getData().size())
     {

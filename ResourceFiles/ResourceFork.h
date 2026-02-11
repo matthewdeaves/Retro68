@@ -14,7 +14,7 @@ class Resource
     int attr;
 public:
     Resource() {}
-    Resource(ResType type, int id, std::string data, std::string name = "", int attr = 0)
+    Resource(ResType type, int id, const std::string& data, const std::string& name = "", int attr = 0)
         : type(type), id(id), name(name), data(data), attr(attr) {}
 
     const std::string& getData() const { return data; }
@@ -38,9 +38,9 @@ public:
     std::map<ResRef, Resource> resources;
 
     Resources() {}
-    Resources(std::istream& in);
-    void writeFork(std::ostream& out) const;
-    void addResource(Resource res) { resources[res.getTypeAndID()] = res; }
+    explicit Resources(std::istream& in);
+    void writeFork(std::ostream& out) const override;
+    void addResource(const Resource& res) { resources[res.getTypeAndID()] = res; }
     void addResources(const Resources& res);
 
     unsigned countResources() const { return resources.size(); }

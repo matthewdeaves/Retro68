@@ -30,12 +30,12 @@ class SharedFileProvider : public ConnectionProvider
 
     static void unloadSegDummy();
 public:
-    SharedFileProvider(StatusDisplay *statusDisplay);
-    virtual ~SharedFileProvider();
+    explicit SharedFileProvider(StatusDisplay *statusDisplay);
+    ~SharedFileProvider() override;
 
-    virtual Stream* getStream();
+    Stream* getStream() override;
 
-    virtual void idle();
+    void idle() override;
 
-    virtual void* segmentToUnload();
+    void* segmentToUnload() override;
 };

@@ -26,7 +26,7 @@
 
 class ToolLauncher : public AppLauncher
 {
-    bool replyReceived;
+    bool replyReceived = false;
     AEEventHandlerUPP replyHandler = nullptr;
 
     Handle buildCommandLine(ConstStr255Param name)
@@ -91,7 +91,7 @@ class ToolLauncher : public AppLauncher
     }
 
 public:
-    virtual bool Launch(ConstStr255Param name)
+    bool Launch(ConstStr255Param name) override
     {
         if(!replyHandler)
             replyHandler = NewAEEventHandlerUPP(&handleReply);
@@ -103,18 +103,21 @@ public:
         OSErr err = AECreateDesc(typeApplSignature, &signature, 4, &address);
 
         AppleEvent ae;
+        // cppcheck-suppress redundantInitialization
         err = AECreateAppleEvent('misc', 'dosc', &address, kAutoGenerateReturnID, kAnyTransactionID, &ae);
-        
+
         Handle command = buildCommandLine(name);
         Str255 commandP;
         commandP[0] =GetHandleSize(command);
         memcpy(commandP + 1, *command, commandP[0]);
         HLock(command);
+        // cppcheck-suppress redundantAssignment
         err = AEPutParamPtr(&ae, keyDirectObject, typeChar, *command, GetHandleSize(command));
         DisposeHandle(command);
 
         AppleEvent reply;
 
+        // cppcheck-suppress redundantAssignment
         err = AESend(&ae, &reply, kAEQueueReply | kAEAlwaysInteract | kAECanSwitchLayer, kAENormalPriority, kAEDefaultTimeout, nullptr, nullptr);
         
         AEDisposeDesc(&address);
@@ -122,7 +125,7 @@ public:
         
         return err == noErr;
     }
-    virtual bool IsRunning(ConstStr255Param name)
+    bool IsRunning(ConstStr255Param name) override
     {
         return !replyReceived;
     }

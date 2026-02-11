@@ -37,7 +37,7 @@ int word(std::istream& in)
 }
 ResType ostype(std::istream& in)
 {
-    return longword(in);
+    return ResType(longword(in));
 }
 int longword(std::istream& in)
 {

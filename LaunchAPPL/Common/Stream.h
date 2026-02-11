@@ -21,7 +21,7 @@ public:
     virtual ~Stream();
 
     void setListener(StreamListener *l) { listener_ = l; }
-    void clearListener(StreamListener *l = nullptr) { if(!l || listener_ == l) listener_ = nullptr; }
+    void clearListener(const StreamListener *l = nullptr) { if(!l || listener_ == l) listener_ = nullptr; }
 
     virtual void write(const void* p, size_t n) = 0;
     virtual void flushWrite() {}
@@ -46,7 +46,7 @@ class StreamWrapper : public Stream, private StreamListener
 {
     Stream* underlying_;
 public:
-    StreamWrapper(Stream* underlying_);
+    explicit StreamWrapper(Stream* underlying_);
     virtual ~StreamWrapper();
     
     StreamWrapper(const StreamWrapper& other) = delete;

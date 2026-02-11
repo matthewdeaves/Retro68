@@ -18,7 +18,7 @@ protected:
 
     ResourceFile app;
     boost::filesystem::path tempDir, appPath, outPath;
-    bool keepTempFiles;
+    bool keepTempFiles = false;
 public:
     /**
      * @brief Launcher

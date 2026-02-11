@@ -235,13 +235,13 @@ bool MakeImportLibraryMulti(fs::path path, fs::path libname)
         return false;
     }
     
-    if(resFile.resources.resources.find(ResRef("cfrg",0)) == resFile.resources.resources.end())
+    if(resFile.resources.resources.find(ResRef(ResType("cfrg"),0)) == resFile.resources.resources.end())
     {
         std::cerr << "No 'cfrg' resource found.\n";
         exit(1);
     }
 
-    Resource& cfrgRes = resFile.resources.resources[ResRef("cfrg",0)];
+    Resource& cfrgRes = resFile.resources.resources[ResRef(ResType("cfrg"),0)];
 
     CFragResource *cfrg = (CFragResource *)cfrgRes.getData().data();
     eswap(cfrg);

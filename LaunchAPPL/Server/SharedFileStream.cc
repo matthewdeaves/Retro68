@@ -60,14 +60,19 @@ void SharedFileStream::idle()
     OSErr err = HOpenDF(vRefNum, dirID, in_channel, fsRdDenyPerm, &refNum);
     if(err == 0)
     {
-        long count, countTotal = 0;
+        long bytesRead;
+#ifdef DEBUG_CONSOLE
+        long countTotal = 0;
+#endif
         do
         {
-            count = kReadBufferSize;
-            err = FSRead(refNum, &count, &readBuffer);
-            countTotal += count;
-            if((err == noErr || err == eofErr) && count > 0)
-                notifyReceive(readBuffer, count);
+            bytesRead = kReadBufferSize;
+            err = FSRead(refNum, &bytesRead, &readBuffer);
+#ifdef DEBUG_CONSOLE
+            countTotal += bytesRead;
+#endif
+            if((err == noErr || err == eofErr) && bytesRead > 0)
+                notifyReceive(readBuffer, bytesRead);
         } while(err == noErr);
         FSClose(refNum);
 #ifdef DEBUG_CONSOLE
@@ -95,6 +100,7 @@ bool SharedFileStream::allDataArrived() const
     return outQueueHead == outQueueTail;
 }
 
+// cppcheck-suppress uninitMemberVar
 SharedFileStream::SharedFileStream(const unsigned char* path)
 {
     Str255 str;

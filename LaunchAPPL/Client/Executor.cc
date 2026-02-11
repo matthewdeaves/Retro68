@@ -7,10 +7,10 @@ namespace po = boost::program_options;
 class ExecutorLauncher : public Launcher
 {
 public:
-    ExecutorLauncher(po::variables_map& options);
-    virtual ~ExecutorLauncher();
+    explicit ExecutorLauncher(po::variables_map& options);
+    ~ExecutorLauncher() override;
 
-    virtual bool Go(int timeout = 0);
+    bool Go(int timeout = 0) override;
 
 };
 

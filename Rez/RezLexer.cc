@@ -84,13 +84,13 @@ struct RezLexer::Priv
     context_type ctx;
     pp_iterator_type iter;
 
-    Priv(std::string data, std::string name)
+    Priv(std::string data, const std::string& name)
         : input(data), ctx(input.begin(), input.end(), name.c_str())
     {
     }
 };
 
-static std::string readInitial(RezWorld& world, std::string filename)
+static std::string readInitial(RezWorld& world, const std::string& filename)
 {
     std::ifstream in(filename);
     if(!in.is_open())
@@ -101,14 +101,14 @@ static std::string readInitial(RezWorld& world, std::string filename)
     return readContents(std::move(in));
 }
 
-RezLexer::RezLexer(RezWorld& world, std::string filename)
+RezLexer::RezLexer(RezWorld& world, const std::string& filename)
     : RezLexer(world, filename, readInitial(world,filename))
 {
 }
 
 
 
-RezLexer::RezLexer(RezWorld& world, std::string filename, const std::string &data)
+RezLexer::RezLexer(RezWorld& world, const std::string& filename, const std::string &data)
     : world(world), curFile(filename), lastLocation(&curFile)
 {
     pImpl.reset(new Priv(preFilter(data), filename));
@@ -130,12 +130,12 @@ RezLexer::~RezLexer()
 
 
 
-void RezLexer::addDefine(std::string str)
+void RezLexer::addDefine(const std::string& str)
 {
     pImpl->ctx.add_macro_definition(str);
 }
 
-void RezLexer::addIncludePath(std::string path)
+void RezLexer::addIncludePath(const std::string& path)
 {
     std::size_t pos = path.find(':');
     if(pos == std::string::npos)

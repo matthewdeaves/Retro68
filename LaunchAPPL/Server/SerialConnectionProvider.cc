@@ -34,6 +34,7 @@ struct SerialConnectionProvider::Streams
     }
 };
 
+// cppcheck-suppress virtualCallInConstructor
 SerialConnectionProvider::SerialConnectionProvider(int port, int baud, StatusDisplay *statusDisplay)
         : port(port), baud(baud), statusDisplay(statusDisplay)
 {

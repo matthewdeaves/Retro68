@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-int ChildProcess(std::string program, std::vector<std::string> args, int timeout);
+int ChildProcess(const std::string& program, std::vector<std::string> args, int timeout);
 
 
 /**
@@ -12,10 +12,10 @@ int ChildProcess(std::string program, std::vector<std::string> args, int timeout
  * @param program
  * @return true if "program" exists in the $PATH and is executable.
  */
-bool CheckExecutable(std::string program);
+bool CheckExecutable(const std::string& program);
 
 
-std::vector<std::string> SplitArguments(std::string str);
-std::vector<std::string> SplitArguments(std::vector<std::string> strs);
+std::vector<std::string> SplitArguments(const std::string& str);
+std::vector<std::string> SplitArguments(const std::vector<std::string>& strs);
 
 #endif // UTILITIES_H

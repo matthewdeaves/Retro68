@@ -7,7 +7,7 @@
 
 void Resources::addResources(const Resources& res)
 {
-    for(auto& rr : res.resources)
+    for(const auto& rr : res.resources)
         addResource(rr.second);
 }
 
@@ -23,7 +23,7 @@ void Resources::writeFork(std::ostream& out) const
 
     std::map< ResType, std::map<int, int> > resourceInfos;
     std::streampos datastart = out.tellp();
-    for(auto& rr : resources)
+    for(const auto& rr : resources)
     {
         const Resource& r = rr.second;
         const std::string& data = r.getData();
@@ -126,7 +126,7 @@ Resources::Resources(std::istream &in)
     for(int i = 0; i < nTypes; i++)
     {
         in.seekg(start + std::streampos(resmapOffset + typeListOffset + 2 + i * 8));
-        std::string type = ostype(in);
+        ResType type = ostype(in);
         int nRes = (word(in) + 1) & 0xFFFF;
         int refListOffset = word(in);
 

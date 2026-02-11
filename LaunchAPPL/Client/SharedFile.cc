@@ -12,31 +12,34 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 using namespace std::literals::chrono_literals;
 
+namespace {
+
 class SharedFileStream : public WaitableStream
 {
     static const long kReadBufferSize = 4096;
     uint8_t readBuffer[kReadBufferSize];
     fs::path shared_directory;
 public:
-    
-    virtual void write(const void* p, size_t n) override;
 
-    virtual void wait() override;
+    void write(const void* p, size_t n) override;
 
-    SharedFileStream(po::variables_map &options);
-    ~SharedFileStream();
+    void wait() override;
+
+    explicit SharedFileStream(po::variables_map &options);
+    ~SharedFileStream() override;
 };
 
 class SharedFileLauncher : public StreamBasedLauncher
 {
     SharedFileStream stream;
 public:
-    SharedFileLauncher(po::variables_map& options);
+    explicit SharedFileLauncher(po::variables_map& options);
 };
 
+// cppcheck-suppress uninitMemberVar
 SharedFileStream::SharedFileStream(po::variables_map &options)
+    : shared_directory(options["shared-directory"].as<std::string>())
 {
-    shared_directory = options["shared-directory"].as<std::string>();
 }
 
 SharedFileStream::~SharedFileStream()
@@ -81,6 +84,8 @@ SharedFileLauncher::SharedFileLauncher(po::variables_map &options)
 {
     SetupStream(&stream);
 }
+
+} // anonymous namespace
 
 void SharedFile::GetOptions(options_description &desc)
 {

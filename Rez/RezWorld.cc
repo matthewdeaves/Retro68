@@ -51,7 +51,7 @@ void RezWorld::addData(ResSpec spec, const std::string &data, yy::location loc)
     resources.addResource(Resource(spec.type(), spec.id(), data, spec.name(), spec.attr()));
 }
 
-void RezWorld::problem(Diagnostic d)
+void RezWorld::problem(const Diagnostic& d)
 {
     hadErrors = true;
     std::cerr << d << std::endl;

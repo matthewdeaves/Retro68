@@ -112,14 +112,14 @@ int main(int argc, const char *argv[])
     }
 
     if(options.count("copy"))
-        for(std::string fn : options["copy"].as<std::vector<std::string>>())
+        for(const std::string& fn : options["copy"].as<std::vector<std::string>>())
             CopyBinaryResources(world, fn);
 
     if(options.count("input"))
-        for(std::string fn : options["input"].as<std::vector<std::string>>())
+        for(const std::string& fn : options["input"].as<std::vector<std::string>>())
         {
-            fs::path path(fn);
-            if(path.extension() == ".rsrc" || path.extension() == ".bin")
+            fs::path inputPath(fn);
+            if(inputPath.extension() == ".rsrc" || inputPath.extension() == ".bin")
             {
                 CopyBinaryResources(world, fn);
             }
@@ -130,22 +130,22 @@ int main(int argc, const char *argv[])
                     RezLexer lexer(world, fn);
 
                     if(options.count("define"))
-                        for(std::string define : options["define"].as<std::vector<std::string>>())
+                        for(const std::string& define : options["define"].as<std::vector<std::string>>())
                             lexer.addDefine(define);
                     if(options.count("include"))
-                        for(std::string path : options["include"].as<std::vector<std::string>>())
-                            lexer.addIncludePath(path);
+                        for(const std::string& includePath : options["include"].as<std::vector<std::string>>())
+                            lexer.addIncludePath(includePath);
 
-                    if(const char *path = getenv("REZ_INCLUDE_PATH"))
+                    if(const char *envPath = getenv("REZ_INCLUDE_PATH"))
                     {
-                        while(const char* end = strchr(path, ':'))
+                        while(const char* end = strchr(envPath, ':'))
                         {
-                            if(end != path)
-                                lexer.addIncludePath(std::string(path, end));
-                            path = end + 1;
+                            if(end != envPath)
+                                lexer.addIncludePath(std::string(envPath, end));
+                            envPath = end + 1;
                         }
-                        if(*path)
-                            lexer.addIncludePath(path);
+                        if(*envPath)
+                            lexer.addIncludePath(envPath);
                     }
 
                     if(world.verboseFlag)
@@ -167,8 +167,8 @@ int main(int argc, const char *argv[])
         return 1;
 
     rsrcFile.resources = world.getResources();
-    rsrcFile.creator = options["creator"].as<std::string>();
-    rsrcFile.type = options["type"].as<std::string>();
+    rsrcFile.creator = ResType(options["creator"].as<std::string>());
+    rsrcFile.type = ResType(options["type"].as<std::string>());
 
     if(world.verboseFlag)
     {

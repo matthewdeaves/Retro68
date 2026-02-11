@@ -34,13 +34,14 @@ class SerialConnectionProvider : public ConnectionProvider
     static void unloadSegDummy();
 public:
     SerialConnectionProvider(int port, int baud, StatusDisplay *statusDisplay);
-    virtual ~SerialConnectionProvider();
+    ~SerialConnectionProvider() override;
 
-    virtual Stream* getStream();
+    Stream* getStream() override;
 
-    virtual void idle();
-    virtual void suspend();
-    virtual void resume();
+    void idle() override;
+    void suspend() override;
+    // cppcheck-suppress virtualCallInConstructor
+    void resume() override;
 
-    virtual void* segmentToUnload();
+    void* segmentToUnload() override;
 };
