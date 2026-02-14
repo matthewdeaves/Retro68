@@ -139,15 +139,19 @@ int _open_r(struct _reent *reent, const char* name, int flags, int mode)
 
     if(flags & O_CREAT)
     {
-        HCreate(0,0,pname,'????','TEXT');
+        OSErr createErr = HCreate(0,0,pname,'????','TEXT');
+        /* Ignore dupFNErr (-48) if file already exists */
+        (void)createErr;
     }
 
     OSErr err = HOpenDF(0,0,pname,fsRdWrPerm,&ref);
     if(err == paramErr)
         err = HOpen(0,0,pname,fsRdWrPerm,&ref);
 
-    if(err)
-        return -1;    // TODO: errno
+    if(err) {
+        reent->_errno = EIO;
+        return -1;
+    }
 
     if(flags & O_TRUNC)
     {

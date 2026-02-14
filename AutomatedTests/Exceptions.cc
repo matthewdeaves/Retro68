@@ -17,6 +17,9 @@
      along with Retro68.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+extern "C" {
+#include "Test.h"
+}
 #include <exception>
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,14 +47,20 @@ void UncaughtExceptionOccurred()
 
 int main(int argc, char** argv)
 {
-    freopen("out", "w", stdout);
+    /* Initialize file system state for stdio to work reliably */
+    TEST_LOG_SIZED("", 0);
+
+    FILE *outFile = fopen("out", "w");
+    if (outFile == NULL)
+        return 1;
+    setvbuf(outFile, NULL, _IONBF, 0);
 
     std::set_unexpected(&UnexpectedExceptionOccurred);
     std::set_terminate(&UncaughtExceptionOccurred);
 
     bool throwFail = false;
     bool catchFail = true;
-            
+
     try
     {
         foobar();
@@ -63,11 +72,12 @@ int main(int argc, char** argv)
     }
 
     if(throwFail)
-        printf("throw didn't really throw\n");
+        fprintf(outFile, "throw didn't really throw\n");
     if(catchFail)
-        printf("catch block never entered\n");
+        fprintf(outFile, "catch block never entered\n");
 
     if(!throwFail && !catchFail)
-        printf("OK\n");
+        fprintf(outFile, "OK\n");
+    fclose(outFile);
     return 0;
 }
