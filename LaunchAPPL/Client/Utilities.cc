@@ -11,11 +11,11 @@ namespace fs = boost::filesystem;
 using std::string;
 using std::vector;
 
-int ChildProcess(string program, vector<string> args, int timeout)
+int ChildProcess(const string& program, vector<string> args, int timeout)
 {
     std::vector<const char*> argv;
     argv.push_back(program.c_str());
-    for(string& s : args)
+    for(const string& s : args)
         argv.push_back(s.c_str());
     argv.push_back(NULL);
 
@@ -102,7 +102,7 @@ int ChildProcess(string program, vector<string> args, int timeout)
 
 
 
-bool CheckExecutable(std::string program)
+bool CheckExecutable(const std::string& program)
 {
     if(access(program.c_str(), X_OK) == 0)
         return true;
@@ -138,7 +138,7 @@ bool CheckExecutable(std::string program)
     return false;
 }
 
-vector<string> SplitArguments(std::string str)
+vector<string> SplitArguments(const std::string& str)
 {
     bool backslash = false;
     bool quote = false;
@@ -180,10 +180,10 @@ vector<string> SplitArguments(std::string str)
     return args;
 }
 
-vector<string> SplitArguments(vector<string> strs)
+vector<string> SplitArguments(const vector<string>& strs)
 {
     vector<string> args;
-    for(string str : strs)
+    for(const string& str : strs)
     {
         vector<string> args1 = SplitArguments(str);
         args.insert(args.end(), args1.begin(), args1.end());

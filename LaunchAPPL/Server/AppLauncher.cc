@@ -27,7 +27,7 @@ class AppLauncher7 : public AppLauncher
 {
     ProcessSerialNumber psn;
 public:
-    virtual bool Launch(ConstStr255Param name)
+    bool Launch(ConstStr255Param name) override
     {
         LaunchParamBlockRec lpb;
         memset(&lpb, 0, sizeof(lpb));
@@ -40,12 +40,12 @@ public:
         lpb.launchAppSpec = &spec;
 
         OSErr err = LaunchApplication(&lpb);
-        
+
         psn = lpb.launchProcessSN;
 
         return err >= 0;
     }
-    virtual bool IsRunning(ConstStr255Param name)
+    bool IsRunning(ConstStr255Param name) override
     {
         ProcessInfoRec info;
         memset(&info, 0, sizeof(info));
@@ -58,7 +58,7 @@ public:
 class AppLauncher6 : public AppLauncher
 {
 public:
-    virtual bool Launch(ConstStr255Param name)
+    bool Launch(ConstStr255Param name) override
     {
         LaunchParamBlockRec lpb;
         memset(&lpb, 0, sizeof(lpb));
@@ -69,19 +69,19 @@ public:
         lpb.launchEPBLength = 6;
         lpb.launchFileFlags = 0;
         lpb.launchControlFlags = 0xC000;
-        
+
         OSErr err = LaunchApplication(&lpb);
 
         return err >= 0;
     }
-    virtual bool IsRunning(ConstStr255Param name)
+    bool IsRunning(ConstStr255Param name) override
     {
         // Iterate through open files to find if the application is still open
         
         uint8_t *fcbs = *(uint8_t**)0x34E; // FCBSPtr;
 
         uint16_t bufSize = * (uint16_t*) fcbs;
-        uint8_t *end = fcbs + bufSize;
+        const uint8_t *end = fcbs + bufSize;
 
         for(uint8_t *fcb = fcbs + 2; fcb < end; fcb += 94)
         {

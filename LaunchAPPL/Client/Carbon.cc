@@ -10,10 +10,10 @@ namespace po = boost::program_options;
 class CarbonLauncher : public Launcher
 {
 public:
-    CarbonLauncher(po::variables_map& options);
-    virtual ~CarbonLauncher();
+    explicit CarbonLauncher(po::variables_map& options);
+    ~CarbonLauncher() override;
 
-    virtual bool Go(int timeout = 0);
+    bool Go(int timeout = 0) override;
 
 };
 

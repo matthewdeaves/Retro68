@@ -21,7 +21,7 @@ Expression::~Expression()
 {
 }
 
-void Expression::error(ResourceCompiler *ctx, std::string err)
+void Expression::error(ResourceCompiler *ctx, const std::string& err)
 {
     ctx->problem(Diagnostic(Diagnostic::Severity::error, err, location));
 }
@@ -126,7 +126,7 @@ int UnaryExpr::evaluateInt(ResourceCompiler *ctx)
 
 
 IdentifierExpr::IdentifierExpr(std::string id, yy::location loc)
-    : Expression(loc), id(id)
+    : Expression(loc), id(std::move(id))
 {
 }
 
@@ -138,7 +138,7 @@ void IdentifierExpr::addArgument(ExprPtr e)
 ExprPtr IdentifierExpr::lookup(ResourceCompiler *ctx)
 {
     Subscripts sub;
-    for(auto arg : arguments)
+    for(const auto& arg : arguments)
         sub.addSubscript(arg->evaluateInt(ctx));
     ExprPtr val = ctx->lookupIdentifier(id, sub);
     if(!val)

@@ -38,6 +38,6 @@ public:
 
     void idle();
 
-    SharedFileStream(const unsigned char* path);
+    explicit SharedFileStream(const unsigned char* path);
     ~SharedFileStream();
 };

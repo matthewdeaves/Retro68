@@ -30,14 +30,16 @@ class TCPConnectionProvider : public ConnectionProvider
     
     std::unique_ptr<MacTCPStream> stream;
 
+    // cppcheck-suppress unusedPrivateFunction
     static void unloadSegDummy();
 public:
-    TCPConnectionProvider(StatusDisplay *statusDisplay);
-    virtual ~TCPConnectionProvider();
+    explicit TCPConnectionProvider(StatusDisplay *statusDisplay);
+    ~TCPConnectionProvider() override;
 
-    virtual Stream* getStream();
+    Stream* getStream() override;
 
-    virtual void idle();
+    void idle() override;
 
-    virtual void* segmentToUnload();
+    // cppcheck-suppress uselessOverride
+    void* segmentToUnload() override;
 };

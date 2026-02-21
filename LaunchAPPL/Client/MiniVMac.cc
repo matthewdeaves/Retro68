@@ -137,11 +137,11 @@ class MiniVMacLauncher : public Launcher
     fs::path vmacDir;
     fs::path vmacPath;
 #ifdef __APPLE__
-    bool vmacIsAppBundle;
+    bool vmacIsAppBundle = false;
 #endif
 
-    hfsvol *sysvol;
-    hfsvol *vol;
+    hfsvol *sysvol = nullptr;
+    hfsvol *vol = nullptr;
     std::unique_ptr<Resources> systemRes;
 
     void CopySystemFile(const std::string& fn, bool required);
@@ -151,11 +151,11 @@ class MiniVMacLauncher : public Launcher
     void MakeAlias(const std::string& dest, const std::string& src);
     fs::path ConvertImage(const fs::path& path);
 public:
-    MiniVMacLauncher(po::variables_map& options);
-    virtual ~MiniVMacLauncher();
+    explicit MiniVMacLauncher(po::variables_map& options);
+    ~MiniVMacLauncher() override;
 
-    virtual bool Go(int timeout = 0);
-    virtual void DumpOutput();
+    bool Go(int timeout = 0) override;
+    void DumpOutput() override;
 };
 
 
@@ -371,7 +371,7 @@ MiniVMacLauncher::MiniVMacLauncher(po::variables_map &options)
         std::ostringstream rsrcOut;
         app.resources.writeFork(rsrcOut);
         std::string rsrc = rsrcOut.str();
-        std::string& data = app.data;
+        const std::string& data = app.data;
 
         hfsfile *file = hfs_create(vol, "App","APPL","????");
         hfs_setfork(file, 0);

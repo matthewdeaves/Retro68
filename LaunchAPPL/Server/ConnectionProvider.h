@@ -25,7 +25,7 @@ class Stream;
 class ConnectionProvider
 {
 protected:
-    StreamListener *listener;
+    StreamListener *listener = nullptr;
 public:
     void setListener(StreamListener *l) { listener = l; }
 

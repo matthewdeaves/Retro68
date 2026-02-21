@@ -9,8 +9,11 @@ class ResType
     int x;
 public:
     ResType() : x(0) {}
+    // cppcheck-suppress noExplicitConstructor
     ResType(int x) : x(x) {}
+    // cppcheck-suppress noExplicitConstructor
     ResType(const std::string& s);
+    // cppcheck-suppress noExplicitConstructor
     ResType(const char* s);
 
     operator int() const { return x; }

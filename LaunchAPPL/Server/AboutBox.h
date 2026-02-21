@@ -34,7 +34,7 @@ class AboutBox : public Window
 public:
     ~AboutBox();
 
-    virtual void Update();
+    void Update() override;
 
     static void ShowAboutBox();
 };

@@ -140,6 +140,7 @@ void UpdateMenus()
     MenuRef m = GetMenuHandle(kMenuFile);
     WindowRef w = FrontWindow();
 
+    // cppcheck-suppress redundantInitialization
     m = GetMenuHandle(kMenuFile);
     if(w && (w == aboutWindow || GetWindowKind(w) < 0))
         EnableItem(m,kItemClose);
@@ -268,11 +269,11 @@ std::unique_ptr<ConnectionProvider> connection;
 
 class LaunchServer : public StreamListener
 {
-    uint32_t dataSize, rsrcSize;
-    uint32_t remainingSize;
-    short refNum;
-    short outRefNum;
-    long outSize, outSizeRemaining;
+    uint32_t dataSize = 0, rsrcSize = 0;
+    uint32_t remainingSize = 0;
+    short refNum = 0;
+    short outRefNum = 0;
+    long outSize = 0, outSizeRemaining = 0;
     std::unique_ptr<AppLauncher> appLauncher;
     int nullEventCounter = 0;
 
@@ -690,6 +691,7 @@ int main()
 #endif
 
 #if !TARGET_API_MAC_CARBON
+    // cppcheck-suppress knownConditionTrueFalse
     if(hasGestalt)
     {
         long resp;
@@ -707,6 +709,8 @@ int main()
         }
     }
 #endif
+    // cppcheck-suppress knownConditionTrueFalse
+    // cppcheck-suppress duplicateCondition
     if(hasGestalt)
     {
         long resp;
@@ -720,6 +724,7 @@ int main()
 
     InitCursor();
 
+    // cppcheck-suppress knownConditionTrueFalse
     if(hasAppleEvents)
     {
         AEInstallEventHandler(kCoreEventClass, kAEOpenApplication, NewAEEventHandlerUPP(&aeRun), 0, false);
@@ -746,6 +751,7 @@ int main()
         Boolean hadEvent;
 
 #if !TARGET_API_MAC_CARBON
+        // cppcheck-suppress knownConditionTrueFalse
         if(!hasWaitNextEvent)
         {
             SystemTask();
@@ -809,6 +815,7 @@ int main()
                     }
                     break;
                 case kHighLevelEvent:
+                    // cppcheck-suppress knownConditionTrueFalse
                     if(hasAppleEvents)
                         AEProcessAppleEvent(&e);
                     break;

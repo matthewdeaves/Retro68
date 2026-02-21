@@ -6,10 +6,10 @@
 class Carbon : public LaunchMethod
 {
 public:
-    virtual std::string GetName() { return "carbon"; }
+    std::string GetName() override { return "carbon"; }
 
-    virtual bool CheckPlatform();
-    virtual std::unique_ptr<Launcher> MakeLauncher(variables_map& options);
+    bool CheckPlatform() override;
+    std::unique_ptr<Launcher> MakeLauncher(variables_map& options) override;
 };
 
 #endif // CARBON_METHOD_H

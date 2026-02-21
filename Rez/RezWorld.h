@@ -36,7 +36,7 @@ public:
     bool verboseFlag;
     bool hadErrors;
 
-    void problem(Diagnostic d);
+    void problem(const Diagnostic& d);
 };
 
 

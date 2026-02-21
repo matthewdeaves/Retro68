@@ -1,4 +1,4 @@
-find_package(Boost COMPONENTS filesystem system REQUIRED)
+find_package(Boost COMPONENTS filesystem REQUIRED)
 
 add_executable(MakePEF MakePEF.cc rs6000.h PEF.h)
 

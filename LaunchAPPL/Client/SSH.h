@@ -6,11 +6,11 @@
 class SSH : public LaunchMethod
 {
 public:
-    virtual std::string GetName() { return "ssh"; }
-    virtual void GetOptions(options_description& desc);
-    virtual bool CheckOptions(variables_map& options);
+    std::string GetName() override { return "ssh"; }
+    void GetOptions(options_description& desc) override;
+    bool CheckOptions(variables_map& options) override;
 
-    virtual std::unique_ptr<Launcher> MakeLauncher(variables_map& options);
+    std::unique_ptr<Launcher> MakeLauncher(variables_map& options) override;
 };
 
 #endif // SSH_H

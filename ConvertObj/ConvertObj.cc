@@ -228,9 +228,9 @@ void sortModules(std::vector<std::shared_ptr<Module>>& modules)
         unemitted.insert(m->name);
     
     std::unordered_map<stringid, std::shared_ptr<Module>> nameMap;
-    for(auto& m : modules)
-        for(auto& l : m->labels)
-            for(auto& str : l.second)
+    for(const auto& m : modules)
+        for(const auto& l : m->labels)
+            for(const auto& str : l.second)
                 nameMap[str] = m;
     
     
@@ -266,14 +266,14 @@ void sortModules(std::vector<std::shared_ptr<Module>>& modules)
 
     std::vector<std::shared_ptr<Module>> sorted;
     sorted.reserve(modules.size());
-    
-    auto p = sorted.begin();
-    
+
+    size_t p = 0;
+
     while(!unemitted.empty())
     {
-        while(p != sorted.end())
+        while(p < sorted.size())
         {
-            for(auto& m2weak : (*p)->nearrefs)
+            for(const auto& m2weak : sorted[p]->nearrefs)
             {
                 if(std::shared_ptr<Module> m2 = m2weak.lock())
                 {
@@ -293,8 +293,8 @@ void sortModules(std::vector<std::shared_ptr<Module>>& modules)
             unemitted.erase(unemitted.begin());
         }
     }
-    
-    sorted.swap(modules);
+
+    modules = std::move(sorted);
 }
 
 int main(int argc, char* argv[])
@@ -443,7 +443,7 @@ int main(int argc, char* argv[])
                     assert(module.get());
                     if(module->bytes.size() < offset + sz * repeat)
                         module->bytes.resize(offset + sz * repeat);
-                    in.read((char*) &module->bytes[offset], sz);
+                    in.read(reinterpret_cast<char*>(&module->bytes[offset]), sz);
                     while(--repeat > 0)
                     {
                         std::copy(module->bytes.begin() + offset, module->bytes.begin() + offset + sz,

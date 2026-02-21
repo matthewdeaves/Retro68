@@ -12,7 +12,7 @@ public:
     Forwarder *other;
     std::vector<std::vector<uint8_t>> packets;
 
-    virtual void write(const void* p, size_t n)
+    void write(const void* p, size_t n) override
     {
         std::cout << prefix << ": ";
         for(size_t i = 0; i < n; i++)
@@ -30,7 +30,7 @@ public:
     {
         std::vector<std::vector<uint8_t>> packets2;
         packets2.swap(packets);
-        for(auto& p : packets2)
+        for(const auto& p : packets2)
             notifyReceive(p.data(), p.size());
     }
 };
@@ -40,9 +40,9 @@ class DumpToConsole : public StreamListener
 public:
     std::string prefix;
 
-    DumpToConsole(std::string prefix) : prefix(prefix) {}
+    explicit DumpToConsole(const std::string& prefix) : prefix(prefix) {}
 
-    size_t onReceive(const uint8_t* p, size_t n)
+    size_t onReceive(const uint8_t* p, size_t n) override
     {
         std::cout << prefix;
         for(size_t i = 0; i < n; i++)

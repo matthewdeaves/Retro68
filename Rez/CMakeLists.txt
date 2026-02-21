@@ -15,7 +15,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Retro68.  If not, see <http://www.gnu.org/licenses/>.
 
-find_package(Boost COMPONENTS wave filesystem system thread regex program_options)
+find_package(Boost COMPONENTS wave filesystem thread regex program_options)
 
 # Look for bison.
     # We need Version 3, and Mac OS X still comes with an outdated version (2.3).

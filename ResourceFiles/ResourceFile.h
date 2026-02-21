@@ -25,8 +25,8 @@ public:
         percent_appledouble
     };
 
-    bool read(std::string path, Format f = Format::autodetect);
-    bool write(std::string path, Format f = Format::autodetect);
+    bool read(const std::string& path, Format f = Format::autodetect);
+    bool write(const std::string& path, Format f = Format::autodetect);
     bool read(std::istream& in, Format f);
     bool write(std::ostream& in, Format f);
     static bool hasPlainDataFork(Format f);

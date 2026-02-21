@@ -7,16 +7,16 @@ class WaitableStream;
 
 class StreamBasedLauncher : public Launcher
 {
-    WaitableStream *stream;
-    Stream *rStream;
+    WaitableStream *stream = nullptr;
+    Stream *rStream = nullptr;
     std::vector<char> outputBytes;
     bool upgradeMode = false;
 public:
-    StreamBasedLauncher(boost::program_options::variables_map& options);
-    virtual ~StreamBasedLauncher();
+    explicit StreamBasedLauncher(boost::program_options::variables_map& options);
+    ~StreamBasedLauncher() override;
 
-    virtual bool Go(int timeout = 0);
-    virtual void DumpOutput();
+    bool Go(int timeout = 0) override;
+    void DumpOutput() override;
 
 protected:
     void SetupStream(WaitableStream* aStream, Stream* wrapped = nullptr);

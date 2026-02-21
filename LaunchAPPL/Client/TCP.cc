@@ -20,24 +20,25 @@ class TCPStream : public WaitableStream
     static const long kReadBufferSize = 4096;
     uint8_t readBuffer[kReadBufferSize];
 public:
-    int fd;
+    int fd = -1;
 
-    virtual void write(const void* p, size_t n) override;
+    void write(const void* p, size_t n) override;
 
-    virtual void wait() override;
+    void wait() override;
 
-    TCPStream(po::variables_map &options);
-    ~TCPStream();
+    explicit TCPStream(po::variables_map &options);
+    ~TCPStream() override;
 };
 
 class TCPLauncher : public StreamBasedLauncher
 {
     TCPStream stream;
 public:
-    TCPLauncher(po::variables_map& options);
+    explicit TCPLauncher(po::variables_map& options);
 };
 
 
+// cppcheck-suppress uninitMemberVar
 TCPStream::TCPStream(po::variables_map &options)
 {
     fd = socket(AF_INET , SOCK_STREAM , 0);

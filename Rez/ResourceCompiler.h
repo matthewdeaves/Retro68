@@ -86,7 +86,7 @@ public:
         ~ArrayScope() { compiler->currentSubscripts.popSubscript(); }
     };
 
-    void problem(Diagnostic d);
+    void problem(const Diagnostic& d);
 };
 
 

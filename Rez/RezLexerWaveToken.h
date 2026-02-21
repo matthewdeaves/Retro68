@@ -9,6 +9,7 @@ class RezLexer::WaveToken : public boost::wave::cpplexer::lex_token<>
 {
 public:
     WaveToken() = default;
+    // cppcheck-suppress noExplicitConstructor
     WaveToken(const boost::wave::cpplexer::lex_token<> & o) : boost::wave::cpplexer::lex_token<>(o) {}
 };
 

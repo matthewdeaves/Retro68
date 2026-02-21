@@ -16,10 +16,10 @@ using std::vector;
 class SSHLauncher : public Launcher
 {
 public:
-    SSHLauncher(po::variables_map& options);
-    virtual ~SSHLauncher();
+    explicit SSHLauncher(po::variables_map& options);
+    ~SSHLauncher() override;
 
-    virtual bool Go(int timeout = 0);
+    bool Go(int timeout = 0) override;
 
 };
 
@@ -62,7 +62,7 @@ bool SSHLauncher::Go(int timeout)
 
     std::vector<const char*> argv;
     argv.push_back(program.c_str());
-    for(std::string& s : args)
+    for(const std::string& s : args)
         argv.push_back(s.c_str());
     argv.push_back(NULL);
 
@@ -86,7 +86,7 @@ bool SSHLauncher::Go(int timeout)
         execvp(argv[0], const_cast<char* const *> (argv.data()));
         perror("exec failed");
         std::cerr << "Tried to execute: " << program;
-        for(auto a : args)
+        for(const auto& a : args)
             std::cerr << " " << a;
         std::cerr << std::endl;
         _exit(1);

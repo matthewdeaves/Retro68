@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     }
     
     if(options.count("input"))
-        for(std::string fn : options["input"].as<std::vector<std::string>>())
+        for(const std::string& fn : options["input"].as<std::vector<std::string>>())
         {
             ResourceFile rsrcFile;
             

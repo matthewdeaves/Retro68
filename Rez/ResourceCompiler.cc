@@ -145,7 +145,7 @@ int ResourceCompiler::getArrayIndex(const std::string &arrayName)
     return curArrayIndices[arrayName];
 }
 
-void ResourceCompiler::problem(Diagnostic d)
+void ResourceCompiler::problem(const Diagnostic& d)
 {
     if(!prePass)
         world.problem(d);

@@ -36,7 +36,7 @@ public:
 
     void idle();
 
-    MacSerialStream(int port = 0, int baud = 19200);
+    explicit MacSerialStream(int port = 0, int baud = 19200);
     ~MacSerialStream();
 
     void close();

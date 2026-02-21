@@ -18,7 +18,7 @@ public:
     static const int noID = 65536;
 
     TypeSpec() : id(noID) {}
-    TypeSpec(ResType type) : type(type), id(noID) {}
+    explicit TypeSpec(ResType type) : type(type), id(noID) {}
     TypeSpec(ResType type, int id) : type(type), id(id) {}
 
     ResType getType() const { return type; }
@@ -53,7 +53,7 @@ public:
 
     virtual void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass) = 0;
 
-    virtual ExprPtr lookupNamedValue(std::string) { return nullptr; }
+    virtual ExprPtr lookupNamedValue(const std::string&) { return nullptr; }
 };
 typedef std::shared_ptr<Field> FieldPtr;
 
@@ -79,12 +79,12 @@ public:
     std::map<std::string, ExprPtr> namedValues;
     ExprPtr lastNamedValue;
 
-    void addNamedValue(std::string n);
-    void addNamedValue(std::string n, ExprPtr val);
-    ExprPtr lookupNamedValue(std::string);
+    void addNamedValue(const std::string& n);
+    void addNamedValue(const std::string& n, ExprPtr val);
+    ExprPtr lookupNamedValue(const std::string& n) override;
 
-    virtual bool needsValue();
-    virtual void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass);
+    bool needsValue() override;
+    void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass) override;
 
 private:
     void compileString(ExprPtr expr, ResourceCompiler *compiler, bool prePass);
@@ -102,8 +102,8 @@ public:
     };
 
     FillAlignField(Type type, bool isAlign, ExprPtr count = ExprPtr());
-    virtual bool needsValue();
-    virtual void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass);
+    bool needsValue() override;
+    void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass) override;
 private:
     Type type;
     ExprPtr count;
@@ -120,10 +120,10 @@ class LabelField : public Field
 {
     std::string name;
 public:
-    LabelField(std::string name);
+    explicit LabelField(const std::string& name);
 
-    virtual bool needsValue();
-    virtual void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass);
+    bool needsValue() override;
+    void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass) override;
 };
 typedef std::shared_ptr<LabelField> LabelFieldPtr;
 
@@ -135,9 +135,9 @@ protected:
 public:
     virtual ~FieldList();
     void addField(FieldPtr field, yy::location loc);
-    void addLabel(std::string name, yy::location loc);
+    void addLabel(const std::string& name, yy::location loc);
 
-    virtual void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass);
+    void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass) override;
 };
 typedef std::shared_ptr<FieldList> FieldListPtr;
 
@@ -147,9 +147,9 @@ class ArrayField : public FieldList
     std::string name;
     ExprPtr arrayCount;
 public:
-    ArrayField(std::string name /* or empty */, ExprPtr count /* may be null*/);
+    ArrayField(const std::string& name /* or empty */, ExprPtr count /* may be null*/);
 
-    virtual void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass);
+    void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass) override;
 };
 typedef std::shared_ptr<ArrayField> ArrayFieldPtr;
 
@@ -157,9 +157,9 @@ class SwitchField : public Field
 {
     std::map<std::string, FieldListPtr> cases;
 public:
-    void addCase(const std::string name, FieldListPtr alternative);
+    void addCase(const std::string& name, FieldListPtr alternative);
 
-    virtual void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass);
+    void compile(ExprPtr expr, ResourceCompiler *compiler, bool prePass) override;
 };
 typedef std::shared_ptr<SwitchField> SwitchFieldPtr;
 
