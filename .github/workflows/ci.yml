@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    # Allow manual trigger (useful for initial Docker build)
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    name: Build (Ubuntu)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            libboost-wave-dev \
+            libboost-filesystem-dev \
+            libboost-thread-dev \
+            libboost-regex-dev \
+            libboost-program-options-dev \
+            bison \
+            flex
+
+      - name: Build hfsutils
+        run: |
+          mkdir -p hfsutils-build
+          mkdir -p hfsutils-install/{bin,lib,include,share/man/man1}
+          cd hfsutils-build
+          ../hfsutils/configure --prefix=$PWD/../hfsutils-install --mandir=$PWD/../hfsutils-install/share/man --enable-devlibs
+          make
+          make install
+
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INCLUDE_PATH=$PWD/../hfsutils-install/include \
+            -DCMAKE_LIBRARY_PATH=$PWD/../hfsutils-install/lib
+
+      - name: Build host tools
+        run: |
+          cd build
+          make -j$(nproc) Rez ResInfo ConvertObj MakePEF MakeImport
+
+  build-macos:
+    runs-on: macos-latest
+    name: Build (macOS)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: |
+          brew install boost bison
+
+      - name: Build hfsutils
+        run: |
+          mkdir -p hfsutils-build
+          mkdir -p hfsutils-install/{bin,lib,include,share/man/man1}
+          cd hfsutils-build
+          ../hfsutils/configure --prefix=$PWD/../hfsutils-install --mandir=$PWD/../hfsutils-install/share/man --enable-devlibs
+          make
+          make install
+
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INCLUDE_PATH=$PWD/../hfsutils-install/include \
+            -DCMAKE_LIBRARY_PATH=$PWD/../hfsutils-install/lib
+
+      - name: Build host tools
+        run: |
+          cd build
+          make -j$(sysctl -n hw.ncpu) Rez ResInfo ConvertObj MakePEF MakeImport
+
+  build-docker:
+    runs-on: ubuntu-latest
+    name: Build & Push Docker
+    # Only run when Docker-related files change, or manually triggered
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (
+        contains(github.event.head_commit.modified, 'Dockerfile') ||
+        contains(github.event.head_commit.modified, 'build-toolchain.bash') ||
+        contains(github.event.head_commit.modified, 'docker-entrypoint.sh') ||
+        contains(github.event.head_commit.added, 'Dockerfile')
+      ))
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/retro68:latest
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    name: Static Analysis
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cppcheck
+        run: sudo apt-get install -y cppcheck
+
+      - name: Run cppcheck
+        run: |
+          cppcheck \
+            --enable=warning,style,performance \
+            --error-exitcode=1 \
+            --inline-suppr \
+            --suppress=missingIncludeSystem \
+            --suppress=cstyleCast \
+            --suppress=unknownMacro \
+            --suppress=useStlAlgorithm \
+            --suppress=useInitializationList \
+            --suppress=constVariableReference \
+            --quiet \
+            Rez/ ResourceFiles/ ConvertObj/ LaunchAPPL/

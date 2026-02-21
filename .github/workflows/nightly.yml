@@ -1,0 +1,138 @@
+name: Nightly Build
+
+on:
+  schedule:
+    # Run at midnight UTC every day
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+
+jobs:
+  # First ensure we have a Docker image (build if needed)
+  ensure-docker-image:
+    runs-on: ubuntu-latest
+    name: Ensure Docker Image Exists
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image-exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Check if image exists
+        id: check
+        run: |
+          if docker pull ghcr.io/${{ github.repository_owner }}/retro68:latest 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.exists != 'true'
+        with:
+          submodules: true
+
+      - name: Log in to GitHub Container Registry
+        if: steps.check.outputs.exists != 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: steps.check.outputs.exists != 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/retro68:latest
+
+  build-samples:
+    runs-on: ubuntu-latest
+    name: Build Sample Apps
+    needs: ensure-docker-image
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/retro68:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build for 68K target
+        run: |
+          mkdir -p build-68k
+          cd build-68k
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=/Retro68-build/toolchain/m68k-apple-macos/cmake/retro68.toolchain.cmake
+
+          # Build sample apps
+          make -j$(nproc) HelloWorld Dialog Raytracer ConsoleTest
+
+          # List built artifacts
+          echo "=== Built 68K Applications ==="
+          find . -name "*.bin" -o -name "*.dsk" | head -20
+
+      - name: Build for PowerPC target
+        run: |
+          mkdir -p build-ppc
+          cd build-ppc
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=/Retro68-build/toolchain/powerpc-apple-macos/cmake/retroppc.toolchain.cmake
+
+          # Build sample apps
+          make -j$(nproc) HelloWorld Dialog Raytracer ConsoleTest
+
+          # List built artifacts
+          echo "=== Built PowerPC Applications ==="
+          find . -name "*.bin" -o -name "*.dsk" -o -name "*.pef" | head -20
+
+      - name: Summary
+        run: |
+          echo "=== Build Summary ==="
+          echo "68K artifacts:"
+          find build-68k -name "*.bin" | wc -l
+          echo "PowerPC artifacts:"
+          find build-ppc -name "*.bin" -o -name "*.pef" | wc -l
+
+  # Run automated tests using Mini vMac emulator
+  run-tests:
+    runs-on: ubuntu-latest
+    name: Run Automated Tests (68K)
+    needs: ensure-docker-image
+    steps:
+      - uses: actions/checkout@v4
+
+      # Cache test environment (ROM download)
+      - name: Cache test environment
+        uses: actions/cache@v4
+        with:
+          path: .github/test-assets/minivmac-test
+          key: minivmac-test-env-v1
+
+      - name: Setup test environment
+        run: |
+          cd .github/test-assets
+          ./setup-test-environment.sh
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and run tests in Docker
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            ghcr.io/${{ github.repository_owner }}/retro68:latest \
+            /workspace/.github/test-assets/run-tests-docker.sh /workspace
+
+      - name: Test results summary
+        if: always()
+        run: |
+          echo "=== Test Run Complete ==="
+          echo "Check logs above for test results"
