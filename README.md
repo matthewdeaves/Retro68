@@ -55,6 +55,26 @@ In that case, get the tigerbrew package manager and
     brew install gcc cmake gmp mpfr libmpc bison texinfo
     brew install boost --c++11
 
+### Quick Setup (this fork)
+
+This fork includes `resources/MPW_Interfaces.zip` with Apple's Universal Interfaces
+(including MacTCP and OpenTransport headers). Run:
+
+    ./setup.sh
+
+This will install prerequisites, extract MPW Interfaces, build the toolchain, and
+register `$RETRO68_TOOLCHAIN` and `$RETRO68_SRC` in `~/.bashrc`.
+
+To extract MPW Interfaces without building the full toolchain:
+
+    ./setup.sh --mpw-only
+
+This fork is part of a dependency chain for Classic Mac development:
+
+    Retro68 (this repo) -> clog -> peertalk -> csend
+
+After setup, continue with [clog](https://github.com/matthewdeaves/clog).
+
 ### Apple Universal Interfaces vs. Multiversal Interfaces
 
 To compile code for the Mac, you need header files and libraries describing
@@ -66,14 +86,12 @@ are free software. However, they are incomplete and may still contain serious
 bugs. Missing things include Carbon, MacTCP, OpenTransport, Navigation Services,
 and basically everything introduced after System 7.0.
 
-The Universal Interfaces used to be a free download from Apple. However,
-they have taken the site off-line and the license agreement does not allow
-redistribution, which is why it's not included in this repository.
-The concept of fair use might cover keeping it available for reasons of historical
-interest, or it might not. I am not a lawyer.
+This fork includes `resources/MPW_Interfaces.zip` which provides the Universal
+Interfaces. The `setup.sh` script extracts them automatically into
+`InterfacesAndLibraries/` where the build system expects them.
 
-If you find a copy of Apple's Universal Interfaces, you can put it
-inside the InterfacesAndLibraries directory in the source tree, and 
+If you prefer to source Apple's Universal Interfaces yourself, you can put them
+inside the InterfacesAndLibraries directory in the source tree.
 Version 3.4 has received the most testing, but any 3.x version could theoretically
 work. The exact directory layout inside the InterfacesAndLibraries directory does
 not matter. It will be picked up automatically when Retro68 is built.
