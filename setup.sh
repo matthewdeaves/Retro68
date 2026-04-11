@@ -46,15 +46,24 @@ check_tool() {
     fi
 }
 
-ensure_bashrc_export() {
+detect_shell_rc() {
+    case "$(basename "$SHELL")" in
+        zsh)  echo "$HOME/.zshrc" ;;
+        *)    echo "$HOME/.bashrc" ;;
+    esac
+}
+
+SHELL_RC="$(detect_shell_rc)"
+
+ensure_shell_export() {
     local var_name="$1" var_value="$2"
-    if ! grep -q "export ${var_name}=" "$HOME/.bashrc" 2>/dev/null; then
-        echo "" >> "$HOME/.bashrc"
-        echo "# Added by Retro68/setup.sh" >> "$HOME/.bashrc"
-        echo "export ${var_name}=\"${var_value}\"" >> "$HOME/.bashrc"
-        echo "  [ok] Added ${var_name} to ~/.bashrc"
+    if ! grep -q "export ${var_name}=" "$SHELL_RC" 2>/dev/null; then
+        echo "" >> "$SHELL_RC"
+        echo "# Added by Retro68/setup.sh" >> "$SHELL_RC"
+        echo "export ${var_name}=\"${var_value}\"" >> "$SHELL_RC"
+        echo "  [ok] Added ${var_name} to $SHELL_RC"
     else
-        echo "  [ok] ${var_name} already in ~/.bashrc"
+        echo "  [ok] ${var_name} already in $SHELL_RC"
     fi
 }
 
@@ -98,6 +107,7 @@ check_tool make || MISSING=1
 check_tool bison || MISSING=1
 check_tool flex || MISSING=1
 check_tool makeinfo || MISSING=1
+check_tool ruby || MISSING=1
 
 if [ "$MISSING" -eq 1 ]; then
     echo ""
@@ -113,13 +123,24 @@ if [ "$MISSING" -eq 1 ]; then
         echo "  [!!] No supported package manager found (need apt or brew)"
         exit 1
     fi
+
+    echo ""
+    echo "Verifying prerequisites after install..."
+    STILL_MISSING=0
+    for tool in gcc g++ cmake make bison flex makeinfo ruby; do
+        check_tool "$tool" || STILL_MISSING=1
+    done
+    if [ "$STILL_MISSING" -eq 1 ]; then
+        echo "  [!!] Some prerequisites are still missing after install. Please install them manually."
+        exit 1
+    fi
 fi
 
 # ── Initialize submodules ────────────────────────────────────────
 
 echo ""
 echo "Checking submodules..."
-if [ -f "$SCRIPT_DIR/gcc/configure" ]; then
+if [ -f "$SCRIPT_DIR/gcc/configure" ] && [ -f "$SCRIPT_DIR/multiversal/make-multiverse.rb" ]; then
     echo "  [ok] Submodules already initialized"
 else
     echo "  [--] Initializing submodules (this downloads ~500MB)..."
@@ -146,13 +167,13 @@ echo "  [ok] Toolchain build complete"
 
 echo ""
 echo "Checking environment..."
-ensure_bashrc_export "RETRO68_TOOLCHAIN" "$TOOLCHAIN_DIR"
-ensure_bashrc_export "RETRO68_SRC" "$SCRIPT_DIR"
+ensure_shell_export "RETRO68_TOOLCHAIN" "$TOOLCHAIN_DIR"
+ensure_shell_export "RETRO68_SRC" "$SCRIPT_DIR"
 
 # Add to PATH if not already there
-if ! grep -q 'RETRO68_TOOLCHAIN/bin' "$HOME/.bashrc" 2>/dev/null; then
-    echo 'export PATH="$RETRO68_TOOLCHAIN/bin:$PATH"' >> "$HOME/.bashrc"
-    echo "  [ok] Added toolchain bin to PATH in ~/.bashrc"
+if ! grep -q 'RETRO68_TOOLCHAIN/bin' "$SHELL_RC" 2>/dev/null; then
+    echo 'export PATH="$RETRO68_TOOLCHAIN/bin:$PATH"' >> "$SHELL_RC"
+    echo "  [ok] Added toolchain bin to PATH in $SHELL_RC"
 else
     echo "  [ok] Toolchain bin already in PATH"
 fi
@@ -173,7 +194,5 @@ echo "  PPC gcc:         $TOOLCHAIN_DIR/bin/powerpc-apple-macos-gcc"
 [ -f "$MPW_CINCLUDES/MacTCP.h" ] && \
 echo "  MPW Interfaces:  $INTERFACES_DIR/MPW_Interfaces/"
 echo ""
-echo "Run 'source ~/.bashrc' to pick up env vars in this shell."
-echo ""
-echo "Next step: set up clog (https://github.com/matthewdeaves/clog)"
+echo "Run 'source $SHELL_RC' to pick up env vars in this shell."
 echo ""
