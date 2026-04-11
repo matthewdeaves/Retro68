@@ -63,17 +63,11 @@ This fork includes `resources/MPW_Interfaces.zip` with Apple's Universal Interfa
     ./setup.sh
 
 This will install prerequisites, extract MPW Interfaces, build the toolchain, and
-register `$RETRO68_TOOLCHAIN` and `$RETRO68_SRC` in `~/.bashrc`.
+register `$RETRO68_TOOLCHAIN` and `$RETRO68_SRC` in your shell rc file.
 
 To extract MPW Interfaces without building the full toolchain:
 
     ./setup.sh --mpw-only
-
-This fork is part of a dependency chain for Classic Mac development:
-
-    Retro68 (this repo) -> clog -> peertalk -> csend
-
-After setup, continue with [clog](https://github.com/matthewdeaves/clog).
 
 ### Apple Universal Interfaces vs. Multiversal Interfaces
 

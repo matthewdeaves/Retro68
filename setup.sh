@@ -10,7 +10,7 @@
 #   ./setup.sh              # Full build (1-2 hours)
 #   ./setup.sh --mpw-only   # Just extract MPW Interfaces (seconds)
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${RETRO68_BUILD:-$HOME/Retro68-build}"
@@ -111,13 +111,24 @@ check_tool ruby || MISSING=1
 
 if [ "$MISSING" -eq 1 ]; then
     echo ""
-    echo "Installing missing prerequisites..."
     if command -v apt-get &>/dev/null; then
+        echo "Install missing prerequisites via apt? [Y/n] "
+        read -r REPLY
+        if [[ "$REPLY" =~ ^[Nn] ]]; then
+            echo "  [!!] Please install the missing tools manually and re-run."
+            exit 1
+        fi
         sudo apt-get update
         sudo apt-get install -y build-essential cmake git unzip \
             libgmp-dev libmpfr-dev libmpc-dev libboost-all-dev \
             bison flex texinfo ruby
     elif command -v brew &>/dev/null; then
+        echo "Install missing prerequisites via Homebrew? [Y/n] "
+        read -r REPLY
+        if [[ "$REPLY" =~ ^[Nn] ]]; then
+            echo "  [!!] Please install the missing tools manually and re-run."
+            exit 1
+        fi
         brew install cmake gmp mpfr libmpc boost bison flex texinfo ruby
     else
         echo "  [!!] No supported package manager found (need apt or brew)"
