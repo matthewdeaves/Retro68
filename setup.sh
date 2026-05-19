@@ -174,6 +174,14 @@ mkdir -p "$BUILD_DIR"
 echo ""
 echo "  [ok] Toolchain build complete"
 
+# ── Install Apple OpenGL 1.2 SDK ────────────────────────────────
+
+if [ -x "$INTERFACES_DIR/OpenGL_SDK/install.sh" ]; then
+    echo ""
+    echo "Installing Apple OpenGL 1.2 SDK..."
+    RETRO68_TOOLCHAIN="$TOOLCHAIN_DIR" "$INTERFACES_DIR/OpenGL_SDK/install.sh"
+fi
+
 # ── Register environment variables ──────────────────────────────
 
 echo ""

@@ -2,7 +2,7 @@
 .*.swp
 CMakeLists.txt.user
 .finf
-InterfacesAndLibraries
+InterfacesAndLibraries/MPW_Interfaces
 .DS_Store
 .vscode
 /result
