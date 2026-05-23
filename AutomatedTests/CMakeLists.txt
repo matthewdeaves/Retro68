@@ -69,6 +69,8 @@ test(Init.cc PROPERTIES PASS_REGULAR_EXPRESSION "constructor\nmain\ndestructor")
 
 test(StdIO.c PROPERTIES PASS_REGULAR_EXPRESSION "OK")
 
+test(Diag305.c PROPERTIES PASS_REGULAR_EXPRESSION "PASS" TIMEOUT 30)
+
 if(CMAKE_SYSTEM_NAME MATCHES Retro68)
     add_application(Segments Segment1.c Segment2.c Segments.segmap Test.h Test.c)
     set_target_properties(Segments PROPERTIES

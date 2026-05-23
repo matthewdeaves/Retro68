@@ -1,4 +1,5 @@
 *~
+*.bak
 .*.swp
 CMakeLists.txt.user
 .finf
