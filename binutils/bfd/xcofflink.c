@@ -4275,8 +4275,26 @@ bfd_xcoff_build_dynamic_sections (bfd *output_bfd,
 
   if (info->strip != strip_all
       && xcoff_hash_table (info)->debug_section != NULL)
-    xcoff_hash_table (info)->debug_section->size =
-      _bfd_stringtab_size (debug_strtab);
+    {
+      asection *dsec = xcoff_hash_table (info)->debug_section;
+
+      dsec->size = _bfd_stringtab_size (debug_strtab);
+
+      /* This runs from the linker's after_allocation hook, i.e. after
+	 lang_size_sections has already finalized the output section sizes.
+	 At that point the synthesized .debug section was still empty, so the
+	 .debug output section was sized as 0.  Propagate the now-known size
+	 to the output section, otherwise _bfd_xcoff_bfd_final_link's
+	 BFD_ASSERT (output_section->size - output_offset
+	 >= _bfd_stringtab_size (debug_strtab)) aborts the link whenever the
+	 merged stabs string table is non-empty.  This never bites AIX because
+	 its toolchain does not emit COFF stabs into .debug, but the
+	 powerpc-apple-macos target does (notably for C++ TUs).  .debug is the
+	 last, non-loadable output section, so growing it cannot shift any
+	 loadable section's VMA.  */
+      if (dsec->output_section != NULL)
+	dsec->output_section->size = dsec->output_offset + dsec->size;
+    }
 
   return true;
 
