@@ -1,7 +1,12 @@
-# XCOFF `.debug` section-size assertion — root cause + candidate fix
+# XCOFF `.debug` section-size assertion — root cause + fix
 
-**Status: UNVERIFIED candidate.** Reasoned from source; not yet built or run.
-Do not merge to `master` until built and tested (see "Verification" below).
+**Status: built + analysed on macOS/arm64 (2026-06-21). Patched PPC toolchain
+builds end-to-end and `PascalTrapCPP.xcoff` links.** The reviewer's *abort*
+could NOT be reproduced on this machine — it is layout-ordering dependent (see
+"Verification results") — but the fix is correct **by construction** for the
+failing ordering, confirmed with linker instrumentation. Runtime (emulator)
+test not possible here: the bundled emulator is Mini vMac (68k only); this is a
+PowerPC binary. Review before merging to `master`.
 
 ## Symptom
 
@@ -58,14 +63,46 @@ any loadable section's VMA. For targets that emit no `.debug` stabs (AIX) this
 is a no-op. Lives in the aix template path, so it also covers `aixppc`/`aix5ppc`
 — harmless there for the same reason.
 
-## Verification (REQUIRED before merge)
+## Verification results (macOS 15 / arm64, 2026-06-21)
 
-1. Build the toolchain (needs `cmake autoconf texinfo boost` + ~1–2 h).
-2. Confirm **baseline** `master` still aborts on `PascalTrapCPP.xcoff`.
-3. Apply this patch, rebuild binutils, relink — assertion gone, link succeeds.
-4. `powerpc-apple-macos-objdump -h PascalTrapCPP.xcoff` → `.debug` size ==
-   stabs string-table size; loadable section VMAs unchanged vs the C build.
-5. Run `PascalTrapCPP.bin` under the classic-PPC emulator (LaunchAPPL) →
-   expect `OK` (needs an emulator + Mac ROM; not available on the dev Mac).
-```
-```
+Built PPC-only from this worktree: `build-toolchain.bash --no-68k --no-carbon
+--multiversal` (Homebrew `cmake gmp mpfr libmpc boost bison flex texinfo ruby`).
+Build dir: `../Retro68-xcoff-build`.
+
+1. **Patched build: full success.** `PascalTrapCPP.xcoff` links, "Done building
+   Retro68." `objdump -h` → `.debug` = `0x610`, loadable `.text/.data/.bss/
+   .loader` VMAs unchanged vs the C build. ✓
+
+2. **Baseline abort NOT reproducible here.** Reverted to unpatched `ld`,
+   rebuilt binutils, relinked — it *also* succeeded (`.debug` = `0xa48`).
+   Instrumenting the unpatched `ld` right before the assertion printed:
+   ```
+   XDBG: outsec=.debug outsize=2632 outoff=0 strtab=1551 dsize=1551
+   ```
+   i.e. the synthesized `.debug` section lands at `output_offset = 0`, and the
+   output section kept the raw pre-dedup input-`.debug` total (2632) which is
+   ≥ the deduplicated strtab (1551), so `size - offset >= strtab` holds. The
+   reviewer's binutils evidently lays the synthesized section out *after* the
+   (now-zeroed) input `.debug` sections, so `output_offset ≈ 2632` and
+   `2632 - 2632 = 0 < 1551` → the abort. Ordering is sensitive to binutils
+   patchlevel / object order / host allocator, which is why one build trips it
+   and another doesn't.
+
+3. **Fix is correct by construction for both orderings.** The patch sets
+   `output_section->size = output_offset + size`, making the assertion an
+   equality whatever `output_offset` is:
+   - reviewer (offset 2632): `2632 + 1551 - 2632 = 1551 ≥ 1551` ✓ — fixes abort
+   - here (offset 0):        `0 + 1551 - 0    = 1551 ≥ 1551` ✓ — tightens slack
+   `.debug` is the last, non-loadable section and nothing else maps into it
+   (`.debug : { *(.debug) }`), so resizing it cannot shift a loadable VMA or
+   truncate real data. No relayout runs after `after_allocation`, so the value
+   set here is final (confirmed: patched output is `0x610`, not the raw `0xa48`).
+
+## Still not verified here
+
+- Runtime execution of the linked PPC binary (no PPC emulator / Mac ROM on this
+  machine; bundled Mini vMac is 68k-only). To close this, link & run on a
+  binutils build that exhibits the failing ordering (e.g. the reviewer's Linux
+  env) and confirm `PascalTrapCPP` prints `OK` under SheepShaver.
+- An isolated repro of the failing ordering. The arithmetic above is certain,
+  but no test here forces `output_offset > 0`.
