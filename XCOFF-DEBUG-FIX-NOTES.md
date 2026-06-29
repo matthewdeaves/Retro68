@@ -7,9 +7,9 @@ section is `0x610` with every loadable section's VMA unchanged. The reviewer's
 *abort* could NOT be reproduced on **either** host — it is layout-ordering
 dependent (see "Verification results") — but the fix is correct **by
 construction** for the failing ordering and harmless for the non-failing one
-(it only ever resizes the last, non-loadable `.debug` section). The one item
-still open is a runtime (emulator) execution of the linked PPC binary; see
-"Still open".
+(it only ever resizes the last, non-loadable `.debug` section). The
+patched-`ld`-linked binary was also **executed on a real PowerPC runtime**
+(SheepShaver / Mac OS 9) and printed `OK` — see "Runtime verification".
 
 ## Symptom
 
@@ -133,14 +133,20 @@ Interfaces (`resources/MPW_Interfaces.zip`, the fork's default).
    (the fork's intended config) supplies `MacTCP.h` and the full build reaches
    `PascalTrapCPP` and completes ("Done building Retro68.").
 
+## Runtime verification (SheepShaver / Mac OS 9, 2026-06-29)
+
+The patched-`ld`-linked `PascalTrapCPP` was run on a real PowerPC runtime
+(SheepShaver, NewWorld ROM, Mac OS 9.0.4) and **printed `OK`** — i.e.
+`FixRound(FixRatio(42,5)) == 8` evaluated correctly, so the C++ binary the fix
+allows to link actually executes. Method: decode the `.bin` (MacBinary) into
+the SheepShaver ExtFS shared volume (`data` fork + `.rsrc/` + 32-byte `.finf/`),
+pre-create an empty `out` file next to the app (the `Test.h` macro uses
+`PBHOpenSync`, which only *opens* an existing file — without it the app writes
+to a garbage refNum and can wedge the File Manager), launch the app once from
+the shared volume, and read `out` back on the host. Result: `out` = `OK\n`. ✓
+
 ## Still open
 
-- **Runtime execution** of the linked PPC binary under a PowerPC emulator.
-  SheepShaver + a Mac ROM is present on the Linux host, but driving it (boot
-  Mac OS 9, `LaunchAPPLServer` in the guest, shared-folder delivery) is an
-  interactive/display-bound step that has not been automated here. The binary
-  links correctly on both hosts; confirming `PascalTrapCPP` prints `OK` at
-  runtime remains the only unchecked box.
 - **An isolated repro of the failing ordering.** The arithmetic is certain and
   the patch is harmless, but neither host produces `output_offset > 0`, so the
   abort itself has not been reproduced in this environment. The original report
