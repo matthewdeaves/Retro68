@@ -1,12 +1,15 @@
 # XCOFF `.debug` section-size assertion — root cause + fix
 
-**Status: built + analysed on macOS/arm64 (2026-06-21). Patched PPC toolchain
-builds end-to-end and `PascalTrapCPP.xcoff` links.** The reviewer's *abort*
-could NOT be reproduced on this machine — it is layout-ordering dependent (see
-"Verification results") — but the fix is correct **by construction** for the
-failing ordering, confirmed with linker instrumentation. Runtime (emulator)
-test not possible here: the bundled emulator is Mini vMac (68k only); this is a
-PowerPC binary. Review before merging to `master`.
+**Status: verified on macOS 15/arm64 (2026-06-21) and Ubuntu/x86-64 (2026-06-29);
+merged to `master` on this fork.** On both hosts the patched PPC toolchain
+builds end-to-end, `PascalTrapCPP.xcoff` links cleanly, and the patched `.debug`
+section is `0x610` with every loadable section's VMA unchanged. The reviewer's
+*abort* could NOT be reproduced on **either** host — it is layout-ordering
+dependent (see "Verification results") — but the fix is correct **by
+construction** for the failing ordering and harmless for the non-failing one
+(it only ever resizes the last, non-loadable `.debug` section). The one item
+still open is a runtime (emulator) execution of the linked PPC binary; see
+"Still open".
 
 ## Symptom
 
@@ -98,11 +101,49 @@ Build dir: `../Retro68-xcoff-build`.
    truncate real data. No relayout runs after `after_allocation`, so the value
    set here is final (confirmed: patched output is `0x610`, not the raw `0xa48`).
 
-## Still not verified here
+## Verification results (Ubuntu / x86-64, GNU Binutils 2.39, 2026-06-29)
 
-- Runtime execution of the linked PPC binary (no PPC emulator / Mac ROM on this
-  machine; bundled Mini vMac is 68k-only). To close this, link & run on a
-  binutils build that exhibits the failing ordering (e.g. the reviewer's Linux
-  env) and confirm `PascalTrapCPP` prints `OK` under SheepShaver.
-- An isolated repro of the failing ordering. The arithmetic above is certain,
-  but no test here forces `output_offset > 0`.
+Re-verified on the reviewer-class Linux host the original report came from,
+using the canonical Retro68 binutils (`configure --disable-plugins
+--target=powerpc-apple-macos --disable-doc`) and Apple's **Universal**
+Interfaces (`resources/MPW_Interfaces.zip`, the fork's default).
+
+1. **Baseline abort NOT reproducible here either.** A freshly rebuilt
+   **unpatched** master `ld` (confirmed via forced `xcofflink.lo` recompile)
+   links `PascalTrapCPP.xcoff` cleanly. `objdump -h` → `.debug` = `0xa48`
+   (= 2632, the raw pre-dedup input total) at `output_offset = 0`, so
+   `size − offset = 0xa48 ≥ strtab` holds. Same benign ordering as the Mac;
+   this binutils lays the synthesized `.debug` section *first*. Tested with both
+   the multiversal and universal interface sets and with both a reused and a
+   freshly compiled object — identical result, so the ordering is a
+   binutils-internal property, not header- or interface-driven.
+
+2. **Patched build: full success.** Rebuilt only binutils with the patch,
+   reinstalled, relinked. `PascalTrapCPP.xcoff` links, no assertion. `objdump -h`
+   → `.debug` = `0x610` (the deduplicated strtab size), and the loadable
+   sections are byte-for-byte unchanged vs the unpatched build:
+   `.text` `0x3000`@VMA`0`, `.data` `0xb90`@VMA`0`, `.bss` `0x30`@VMA`0xb90`,
+   `.loader` `0x5b0`@VMA`0xbc0`. Only the non-loadable `.debug` shrank
+   (`0xa48 → 0x610`). ✓ Matches the macOS result exactly.
+
+3. **Note on the full `build-toolchain.bash` baseline.** With `--multiversal`
+   the end-to-end build stops earlier (54%) at `LaunchAPPLServer.cc` →
+   `MacTCP.h: No such file or directory`, because the multiversal interfaces do
+   not ship `MacTCP.h`. This is unrelated to XCOFF; building with `--universal`
+   (the fork's intended config) supplies `MacTCP.h` and the full build reaches
+   `PascalTrapCPP` and completes ("Done building Retro68.").
+
+## Still open
+
+- **Runtime execution** of the linked PPC binary under a PowerPC emulator.
+  SheepShaver + a Mac ROM is present on the Linux host, but driving it (boot
+  Mac OS 9, `LaunchAPPLServer` in the guest, shared-folder delivery) is an
+  interactive/display-bound step that has not been automated here. The binary
+  links correctly on both hosts; confirming `PascalTrapCPP` prints `OK` at
+  runtime remains the only unchecked box.
+- **An isolated repro of the failing ordering.** The arithmetic is certain and
+  the patch is harmless, but neither host produces `output_offset > 0`, so the
+  abort itself has not been reproduced in this environment. The original report
+  came from a binutils build that ordered the synthesized `.debug` *after* the
+  zeroed input sections; reproducing it would need that exact
+  patchlevel/host/object ordering.
