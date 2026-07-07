@@ -67,6 +67,41 @@ ensure_shell_export() {
     fi
 }
 
+# On macOS several Homebrew formulae are "keg-only" (not symlinked onto PATH),
+# and the system bison (2.3) is far older than GCC/binutils need (>= 3.0.2).
+# Put the Homebrew copies first so both the prerequisite checks below and the
+# toolchain build inherit them. No-op on Linux or when Homebrew is absent.
+prepend_brew_kegs() {
+    command -v brew &>/dev/null || return 0
+    local keg kegbin
+    for keg in bison flex texinfo; do
+        kegbin="$(brew --prefix "$keg" 2>/dev/null)/bin"
+        [ -d "$kegbin" ] || continue
+        case ":$PATH:" in
+            *":$kegbin:"*) ;;
+            *) PATH="$kegbin:$PATH" ;;
+        esac
+    done
+    export PATH
+}
+
+# The GCC/binutils build needs bison >= 3.0.2; macOS ships 2.3. Fail (so the
+# prerequisite install is triggered) if the bison on PATH is too old.
+check_bison_version() {
+    local v
+    v="$(bison --version 2>/dev/null | sed -n '1s/.*[^0-9]\([0-9][0-9.]*\).*/\1/p')"
+    case "$v" in
+        ''|0.*|1.*|2.*) echo "  [!!] bison ${v:-not found} too old (need >= 3.0.2)"; return 1 ;;
+        *) echo "  [ok] bison $v"; return 0 ;;
+    esac
+}
+
+# Read a Y/n confirmation, defaulting to Yes when stdin is not a TTY (CI/piped),
+# so an automated run never aborts on `read` under `set -euo pipefail`.
+confirm() {
+    if [ -t 0 ]; then read -r REPLY; else REPLY=Y; fi
+}
+
 # ── Extract MPW Interfaces ──────────────────────────────────────
 
 echo "Checking MPW Interfaces..."
@@ -99,12 +134,13 @@ fi
 
 echo ""
 echo "Checking prerequisites..."
+prepend_brew_kegs
 MISSING=0
 check_tool gcc || MISSING=1
 check_tool g++ || MISSING=1
 check_tool cmake || MISSING=1
 check_tool make || MISSING=1
-check_tool bison || MISSING=1
+check_bison_version || MISSING=1
 check_tool flex || MISSING=1
 check_tool makeinfo || MISSING=1
 check_tool ruby || MISSING=1
@@ -113,7 +149,7 @@ if [ "$MISSING" -eq 1 ]; then
     echo ""
     if command -v apt-get &>/dev/null; then
         echo "Install missing prerequisites via apt? [Y/n] "
-        read -r REPLY
+        confirm
         if [[ "$REPLY" =~ ^[Nn] ]]; then
             echo "  [!!] Please install the missing tools manually and re-run."
             exit 1
@@ -124,7 +160,7 @@ if [ "$MISSING" -eq 1 ]; then
             bison flex texinfo ruby
     elif command -v brew &>/dev/null; then
         echo "Install missing prerequisites via Homebrew? [Y/n] "
-        read -r REPLY
+        confirm
         if [[ "$REPLY" =~ ^[Nn] ]]; then
             echo "  [!!] Please install the missing tools manually and re-run."
             exit 1
@@ -137,10 +173,12 @@ if [ "$MISSING" -eq 1 ]; then
 
     echo ""
     echo "Verifying prerequisites after install..."
+    prepend_brew_kegs
     STILL_MISSING=0
-    for tool in gcc g++ cmake make bison flex makeinfo ruby; do
+    for tool in gcc g++ cmake make flex makeinfo ruby; do
         check_tool "$tool" || STILL_MISSING=1
     done
+    check_bison_version || STILL_MISSING=1
     if [ "$STILL_MISSING" -eq 1 ]; then
         echo "  [!!] Some prerequisites are still missing after install. Please install them manually."
         exit 1

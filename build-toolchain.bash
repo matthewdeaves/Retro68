@@ -23,7 +23,7 @@ SRC=$(cd `dirname $0` && pwd -P)
 DEFAULT_PREFIX=`pwd -P`/toolchain/
 PREFIX=$DEFAULT_PREFIX
 BINUTILS=`pwd -P`/binutils-build
-BUILD_JOBS=$(nproc || sysctl -n hw.physicalcpu)
+BUILD_JOBS=$(nproc 2>/dev/null || sysctl -n hw.physicalcpu 2>/dev/null || echo 4)
 
 ##################### Prerequisites check
 
