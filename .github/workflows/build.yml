@@ -21,12 +21,12 @@ jobs:
 
       - name: Build Docker images
         run: |
-          docker build --target build -t ghcr.io/autc04/retro68-build:latest .
-          docker build --target release -t ghcr.io/autc04/retro68:latest .
+          docker build --target build -t ghcr.io/${{ github.repository_owner }}/retro68-build:latest .
+          docker build --target release -t ghcr.io/${{ github.repository_owner }}/retro68:latest .
 
       - name: Run tests with Executor 2000
         run: |
-          docker run --name retro68-build --rm -i -d ghcr.io/autc04/retro68-build:latest
+          docker run --name retro68-build --rm -i -d ghcr.io/${{ github.repository_owner }}/retro68-build:latest
           docker exec -i retro68-build /bin/bash <<"EOF"
             cd /Retro68-build
             curl -L -O https://github.com/autc04/executor/releases/download/v0.1.0/Executor2000-0.1.0-Linux.tar.bz2
@@ -55,7 +55,7 @@ jobs:
 
       - name: Push release image
         if: github.ref == 'refs/heads/master'
-        run: docker push ghcr.io/autc04/retro68:latest
+        run: docker push ghcr.io/${{ github.repository_owner }}/retro68:latest
 
   macos:
     runs-on: macos-latest
