@@ -35,10 +35,16 @@ through Linux/Windows filesystems.
 
 ## Install into the toolchain
 
-After running the main Retro68 toolchain build, run:
+**You normally don't run this by hand.** `build-toolchain.bash` invokes it
+automatically at the end of every PowerPC build, so `./setup.sh`, the Docker
+image, and CI all bake OpenGL into the toolchain with no extra step.
+
+To (re)install into an already-built toolchain — e.g. after editing the SDK —
+run it directly:
 
 ```
-./InterfacesAndLibraries/OpenGL_SDK/install.sh
+RETRO68_TOOLCHAIN=$HOME/Retro68-build/toolchain \
+    ./InterfacesAndLibraries/OpenGL_SDK/install.sh
 ```
 
 That script:
@@ -48,8 +54,12 @@ That script:
 2. Runs `MakeImport` on each MacBinary stub, producing
    `libOpenGLLibrary.a`, `libOpenGLMemory.a`, `libOpenGLUtility.a` in
    `$RETRO68/powerpc-apple-macos/lib/`.
-
-`setup.sh` runs this automatically at the end of a full toolchain build.
+3. Self-verifies by compiling and linking a small `agl`/`gl`/`glu` test
+   program against all three libraries. This is best-effort: the headers and
+   libs are always installed, and a failed smoke test only warns (it does not
+   abort the build). It fails under the multiversal interfaces because `agl.h`
+   includes `<Quickdraw.h>` and multiversal ships `QuickDraw.h`; build with
+   Apple's Universal Interfaces to compile AGL/OpenGL apps.
 
 ## Using it from a project
 

@@ -21,8 +21,11 @@ A GCC-based cross-compiler for classic **68k and PowerPC Macintosh**, forked fro
 - **Builds against Apple's Universal Interfaces** (Carbon, MacTCP, OpenTransport
   and other post-System-7 APIs the multiversal interfaces don't cover); `setup.sh`
   sets them up. See [Interfaces](#interfaces).
-- **Apple OpenGL 1.2 SDK addon** (`InterfacesAndLibraries/OpenGL_SDK/` — `agl`/`gl`/
-  `glext` headers) for classic PowerPC OpenGL, installed by `setup.sh` when present.
+- **Apple OpenGL 1.2 SDK — built in** (`InterfacesAndLibraries/OpenGL_SDK/` — `agl`/
+  `gl`/`glu`/`glext` headers + CFM stub libraries) for classic **PowerPC** OpenGL.
+  Installed automatically by `build-toolchain.bash`, so it lands in *every* build
+  path — `setup.sh`, the Docker image, and CI — with no extra step. See
+  [OpenGL](#opengl).
 - **`Hardware/` — real-Mac deployment helpers.** Post-processing scripts
   (`raw2dc42.py`, `fix_alt_mdb.py`, `patch_creator.py`) for the rough edges you hit
   writing Retro68's output to *real* Classic Macs instead of emulators. See
@@ -96,6 +99,50 @@ interfaces if that directory is absent (the build auto-detects which; remove the
 directory to switch). Apple's interfaces cover Carbon, MacTCP, OpenTransport and
 the rest of post-System-7; multiversal does not. See the upstream README for more
 on both.
+
+## OpenGL
+
+Apple's **OpenGL 1.2 SDK** (January 2001) is packaged in
+[`InterfacesAndLibraries/OpenGL_SDK/`](InterfacesAndLibraries/OpenGL_SDK/) and
+installed into the toolchain automatically by `build-toolchain.bash` — so a plain
+`./setup.sh`, a Docker build, or a CI run all produce a toolchain you can build
+OpenGL apps with. No separate step. The installer self-verifies by compiling and
+linking a small `agl`/`gl`/`glu` program at the end of the build.
+
+**PowerPC only** — Apple never shipped OpenGL for 68k Macs, so it is skipped when
+PPC is not being built. Works for classic CFM (Mac OS 8.x/9.x) and Carbon CFM
+(CarbonLib / Mac OS X).
+
+**Build with Apple's Universal Interfaces** to *compile* AGL/OpenGL apps: `agl.h`
+includes `<Quickdraw.h>`, the spelling Apple's interfaces use. `./setup.sh`
+selects Universal Interfaces automatically when present. Under the open-source
+multiversal interfaces the headers and stub libs are still installed, but
+`agl.h` won't compile on a case-sensitive filesystem (multiversal ships
+`QuickDraw.h`); the installer prints a warning rather than failing the build.
+
+Use it from a project:
+
+```c
+#include <agl.h>
+#include <gl.h>
+```
+
+```cmake
+add_application(myglapp myglapp.c myglapp.r)
+target_link_libraries(myglapp PRIVATE
+    "-lOpenGLLibrary"   # gl* + agl*
+    "-lOpenGLUtility"   # glu*  (only if used)
+    "-lOpenGLMemory")   # Apple memory helpers (only if used)
+```
+
+To (re)install into an already-built toolchain without a full rebuild:
+
+```sh
+RETRO68_TOOLCHAIN=$RETRO68_TOOLCHAIN ./InterfacesAndLibraries/OpenGL_SDK/install.sh
+```
+
+More detail — provenance, layout, licensing — in
+[`InterfacesAndLibraries/OpenGL_SDK/README.md`](InterfacesAndLibraries/OpenGL_SDK/README.md).
 
 ## License
 

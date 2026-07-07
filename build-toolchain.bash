@@ -403,6 +403,16 @@ if [ $BUILD_CARBON != false ]; then
 	echo 'subdirs("build-target-carbon")' >> CTestTestfile.cmake
 fi
 
+##################### Install Apple OpenGL 1.2 SDK (PowerPC CFM)
+# Runs for every build path that funnels through this script (setup.sh, the
+# Docker image, and CI). PPC-only: Apple never shipped OpenGL for 68k.
+
+if [ $BUILD_PPC != false ] && [ -x "$INTERFACES_DIR/OpenGL_SDK/install.sh" ]; then
+	echo
+	echo "Installing Apple OpenGL 1.2 SDK..."
+	RETRO68_TOOLCHAIN="$PREFIX" "$INTERFACES_DIR/OpenGL_SDK/install.sh"
+fi
+
 echo
 echo "==============================================================================="
 echo "Done building Retro68."

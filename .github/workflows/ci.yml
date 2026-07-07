@@ -27,6 +27,7 @@ jobs:
             libboost-thread-dev \
             libboost-regex-dev \
             libboost-program-options-dev \
+            libboost-test-dev \
             bison \
             flex
 

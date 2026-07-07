@@ -27,6 +27,7 @@ done
 
 # ── Import libraries (PEF stubs -> Retro68 .a archives) ─────────
 echo "  Libraries -> $PPC_LIB/"
+mkdir -p "$PPC_LIB"
 TMP=$(mktemp -d)
 trap "rm -rf '$TMP'" EXIT
 for bin in "$SCRIPT_DIR/Libraries/"*.bin; do
@@ -37,6 +38,29 @@ for bin in "$SCRIPT_DIR/Libraries/"*.bin; do
     printf "    %-25s -> %s\n" "$(basename "$bin")" "lib${lib_name}.a"
 done
 
+# ── Verify: headers compile and the stubs link (best-effort) ────
+# Non-fatal on purpose: the headers/libs are installed regardless. The smoke
+# test needs <Quickdraw.h> (pulled in by agl.h). Apple's Universal Interfaces
+# provide that spelling; the open-source multiversal interfaces generate
+# QuickDraw.h (capital D), so on a case-sensitive filesystem the compile can't
+# find it. We still want the SDK installed in that configuration, so a failed
+# smoke test warns rather than aborting the whole toolchain build.
+GCC="$TOOLCHAIN/bin/powerpc-apple-macos-gcc"
+if [[ -x "$GCC" ]]; then
+    echo "  Verifying install..."
+    printf '#include <agl.h>\n#include <gl.h>\n#include <glu.h>\nint main(void){glClear(GL_COLOR_BUFFER_BIT);gluErrorString(0);aglGetError();return 0;}\n' \
+        > "$TMP/glcheck.c"
+    if "$GCC" "$TMP/glcheck.c" -o "$TMP/glcheck" \
+            -lOpenGLLibrary -lOpenGLUtility -lOpenGLMemory 2>"$TMP/glcheck.log"; then
+        echo "  [ok] headers + libOpenGLLibrary/Utility/Memory compile and link"
+    else
+        echo "  [warn] OpenGL smoke test did not build — headers and libs are still installed." >&2
+        echo "         Expected with the multiversal interfaces (agl.h needs <Quickdraw.h>," >&2
+        echo "         which Apple's Universal Interfaces provide). Build with Universal" >&2
+        echo "         Interfaces to compile AGL/OpenGL apps." >&2
+        sed 's/^/           | /' "$TMP/glcheck.log" >&2 || true
+    fi
+fi
+
 echo
-echo "Installed OpenGL SDK. Test with:"
-echo "  echo '#include <agl.h>' | $TOOLCHAIN/bin/powerpc-apple-macos-gcc -E -x c - >/dev/null"
+echo "Installed Apple OpenGL 1.2 SDK into $TOOLCHAIN"
