@@ -88,12 +88,15 @@ prepend_brew_kegs() {
 # The GCC/binutils build needs bison >= 3.0.2; macOS ships 2.3. Fail (so the
 # prerequisite install is triggered) if the bison on PATH is too old.
 check_bison_version() {
-    local v
-    v="$(bison --version 2>/dev/null | sed -n '1s/.*[^0-9]\([0-9][0-9.]*\).*/\1/p')"
-    case "$v" in
-        ''|0.*|1.*|2.*) echo "  [!!] bison ${v:-not found} too old (need >= 3.0.2)"; return 1 ;;
-        *) echo "  [ok] bison $v"; return 0 ;;
-    esac
+    local v major
+    v="$(bison --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)"
+    major="${v%%.*}"
+    if [ -z "$v" ] || ! [ "$major" -ge 3 ] 2>/dev/null; then
+        echo "  [!!] bison ${v:-not found} too old (need >= 3.0.2)"
+        return 1
+    fi
+    echo "  [ok] bison $v"
+    return 0
 }
 
 # Read a Y/n confirmation, defaulting to Yes when stdin is not a TTY (CI/piped),
