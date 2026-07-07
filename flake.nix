@@ -2,22 +2,24 @@
   description = "Description for the project";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     multiversal.url = "github:autc04/multiversal";
     multiversal.flake = false;
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
   outputs = inputs@{ flake-parts, nixpkgs, multiversal, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } ({ self, lib, retroPlatforms, ... }: {
+    flake-parts.lib.mkFlake { inherit inputs; } ({ self, ... }: {
       imports = [
         ./nix/standalone.nix
       ];
-      _module.args.lib = import (nixpkgs + "/lib");
-      _module.args.retroPlatforms = import ./nix/platforms.nix;
 
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
       perSystem = { config, self', inputs', pkgs, system, ... }:
+        let
+          lib = pkgs.lib;
+          retroPlatforms = (import ./nix/platforms.nix) { inherit lib; };
+        in
         {
           _module.args.pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
 
@@ -29,7 +31,12 @@
                 inherit system;
                 overlays = [ self.overlays.default ];
                 crossSystem = plat;
-                config = { allowUnsupportedSystem = true; };
+                config = { 
+                  allowUnsupportedSystem = true; 
+                };
+                stdenvStages = let 
+                  realStdenvStages = import (nixpkgs + "/pkgs/stdenv");                  
+                  in args@{crossSystem, ...}: realStdenvStages (args // { crossSystem = plat; });
               })
             retroPlatforms;
 
@@ -38,6 +45,9 @@
               inputsFrom = [ pkgs.retro68.monolithic ];
               nativeBuildInputs = [ pkgs.nixpkgs-fmt ];
               hardeningDisable = [ "format" ];
+              shellHook = ''
+                export PATH="$PWD/build/toolchain/bin:$PATH"
+              '';
             };
           } // lib.mapAttrs
             (name: cross:
@@ -70,7 +80,7 @@
         };
       flake = {
         overlays.default =
-          lib.composeManyExtensions [
+          nixpkgs.lib.composeManyExtensions [
             ((import nix/overlay.nix) {
               multiversal_src =
                 if builtins.pathExists ./multiversal/make-multiverse.rb

@@ -8,7 +8,7 @@ pkgs: prevPkgs: {
         stdenv.mkDerivation {
           name = "retro68.monolithic";
           src = ../.;
-          nativeBuildInputs = [ cmake bison flex ruby ninja bash ];
+          nativeBuildInputs = [ cmake bison flex ruby ninja bash perl texinfo ];
           buildInputs = [ boost gmp mpfr libmpc zlib ]
           ++ lib.optional hostPlatform.isDarwin
             darwin.apple_sdk.frameworks.ApplicationServices;
@@ -73,7 +73,7 @@ pkgs: prevPkgs: {
           buildInputs = [ texinfo ];
 
           configureFlags =
-            [ "--target=${stdenv.targetPlatform.config}" "--disable-doc" ]
+            [ "--target=${stdenv.targetPlatform.config}" "--disable-doc" "--disable-werror" ]
             ++ stdenv.targetPlatform.retro68BinutilsConfig or [ ];
           enableParallelBuilding = true;
 
@@ -101,12 +101,12 @@ pkgs: prevPkgs: {
         stdenv.mkDerivation rec {
           name = "retro68.gcc_unwrapped";
           src = ../gcc;
+          nativeBuildInputs = [ texinfo ];
           buildInputs = [ retro68.binutils_unwrapped gmp mpfr libmpc ];
           configureFlags = [
             "--target=${stdenv.targetPlatform.config}"
             "--enable-languages=c,c++"
             "--disable-libssp"
-            "MAKEINFO=missing"
           ] ++ stdenv.targetPlatform.retro68GccConfig or [ ];
           hardeningDisable = [ "format" ];
           enableParallelBuilding = true;
@@ -116,7 +116,7 @@ pkgs: prevPkgs: {
             mkdir -p $out/${stdenv.targetPlatform.config}/bin
             ln -s ${retro68.binutils_unwrapped}/${stdenv.targetPlatform.config}/bin/* $out/${stdenv.targetPlatform.config}/bin/
 
-            export target_configargs="--disable-nls --enable-libstdcxx-dual-abi=no --disable-libstdcxx-verbose"
+            export target_configargs="--disable-nls --disable-libstdcxx-verbose"
             $src/configure ${builtins.toString configureFlags} --prefix=$out
             make -j$NIX_BUILD_CORES
             make install
